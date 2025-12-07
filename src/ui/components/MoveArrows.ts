@@ -37,40 +37,40 @@ function getCSSVariable(name: string, fallback: string): string {
  * Get arrow configurations with theme-aware colors
  */
 function getArrowConfigs(): Record<string, ArrowConfig> {
-  // Get theme colors from CSS variables
+  // Get theme colors from CSS variables - consistent purple theme
   const primaryColor = getCSSVariable('--color-primary', '#7d82ea');
   const primaryLight = getCSSVariable('--color-primary-light', '#9a9ef0');
   
   return {
     lastMove: {
-      color: '#d4a84b', // Muted gold that complements beige/brown board
-      opacity: 0.7,
-      width: 10,
-      headSize: 20,
+      color: primaryLight, // Use theme color for consistency
+      opacity: 0.5,
+      width: 8,
+      headSize: 16,
     },
     suggestion: {
-      color: primaryColor, // Use theme primary color (muted purple)
-      opacity: 0.8,
-      width: 12,
-      headSize: 24,
+      color: primaryColor, // Use theme primary color (purple)
+      opacity: 0.85,
+      width: 10,
+      headSize: 18,
     },
     analysis: {
       color: primaryLight, // Use lighter theme color for analysis
-      opacity: 0.7,
-      width: 10,
-      headSize: 20,
+      opacity: 0.6,
+      width: 8,
+      headSize: 16,
     },
     threat: {
       color: '#c45c5c', // Muted red for threats
-      opacity: 0.7,
-      width: 10,
-      headSize: 20,
+      opacity: 0.6,
+      width: 8,
+      headSize: 16,
     },
     custom: {
       color: primaryColor, // Use theme primary for custom arrows
-      opacity: 0.6,
-      width: 10,
-      headSize: 20,
+      opacity: 0.5,
+      width: 8,
+      headSize: 16,
     },
   };
 }

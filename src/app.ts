@@ -807,13 +807,12 @@ export class App {
       return;
     }
     
-    // Get best move from AI
-    const bestMove = this.ai.getBestMove(state.game);
+    // Get fast hint from AI (instant response with depth 1)
+    const bestMove = this.ai.getFastHint(state.game);
     
     if (bestMove) {
       // Show suggestion arrow
       this.moveArrows.showSuggestion(bestMove.from, bestMove.to);
-      Toast.info('Indice : Meilleur coup affiché');
     } else {
       Toast.warning('Aucun indice disponible');
     }

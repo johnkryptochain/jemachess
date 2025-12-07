@@ -344,6 +344,48 @@ export class ChessAI {
   }
 
   /**
+   * Get a fast hint for the current position (instant response)
+   * Uses depth 1 for immediate feedback
+   */
+  getFastHint(game: ChessGame): Move | null {
+    this.nodesSearched = 0;
+
+    const moves = game.getAllCurrentLegalMoves();
+    if (moves.length === 0) return null;
+    if (moves.length === 1) return moves[0];
+
+    const isMaximizing = game.currentTurn === PieceColor.WHITE;
+    let bestMove: Move | null = null;
+    let bestScore = isMaximizing ? -Infinity : Infinity;
+
+    // Order moves for better selection
+    const orderedMoves = this.orderMoves(moves, game);
+
+    // Simple 1-ply search for instant response
+    for (const move of orderedMoves) {
+      const gameCopy = this.cloneGame(game);
+      gameCopy.makeMove(move);
+
+      // Just evaluate the position after the move
+      const score = evaluatePosition(gameCopy.getBoard());
+
+      if (isMaximizing) {
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = move;
+        }
+      } else {
+        if (score < bestScore) {
+          bestScore = score;
+          bestMove = move;
+        }
+      }
+    }
+
+    return bestMove;
+  }
+
+  /**
    * Analyze a position and return evaluation
    */
   analyzePosition(game: ChessGame): {
