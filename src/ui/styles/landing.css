@@ -771,6 +771,8 @@
 @media (max-width: 768px) {
   .landing-page {
     grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
   }
 
   .landing-sidebar {
@@ -795,19 +797,57 @@
     justify-content: center;
   }
 
+  .landing-main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .landing-hero {
+    padding: 60px 16px 40px;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .hero-content {
+    margin-bottom: 40px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
   .hero-title {
     font-size: 32px;
     letter-spacing: -1px;
+    text-align: center;
+    width: 100%;
   }
   
   .hero-subtitle {
     font-size: 16px;
+    text-align: center;
+    width: 100%;
+  }
+
+  .hero-users {
+    text-align: center;
+    width: 100%;
   }
   
   .hero-actions {
     flex-direction: column;
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
+    align-items: center;
   }
   
   .hero-cta {
@@ -817,7 +857,10 @@
   .hero-features {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    padding: 0 16px;
+    padding: 0;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
   }
   
   .feature-card {
@@ -836,15 +879,6 @@
   
   .feature-content p {
     font-size: 12px;
-  }
-  
-  .landing-hero {
-    padding: 80px 20px 40px;
-    min-height: 100vh;
-  }
-  
-  .hero-content {
-    margin-bottom: 40px;
   }
 }
 

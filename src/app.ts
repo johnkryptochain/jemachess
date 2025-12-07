@@ -1324,7 +1324,7 @@ export class App {
   private async handleCreateRoom(playerName: string): Promise<void> {
     try {
       store.setConnectionState({ status: ConnectionStatus.CONNECTING });
-      store.setPlayers(playerName, 'Waiting...');
+      store.setPlayers(playerName, 'En attente...');
       
       // Initialize peer connection if needed
       if (!this.peerConnection) {
@@ -1334,12 +1334,12 @@ export class App {
       // Create room (this also connects to the signaling server)
       const roomId = await this.peerConnection.createRoom();
       
-      // Generate room code from peer ID
-      const roomCode = roomId.substring(0, 6).toUpperCase();
+      // Use the full peer ID as room code (needed for connection)
+      const roomCode = roomId;
       store.setRoomCode(roomCode);
       store.setConnectionState({ status: ConnectionStatus.CONNECTED });
       
-      Toast.success(`Salle créée : ${roomCode}`);
+      Toast.success(`Salle créée ! Partagez ce code : ${roomCode}`);
       
       // Update lobby UI
       if (this.lobby) {
@@ -1351,7 +1351,7 @@ export class App {
       
     } catch (error) {
       console.error('Failed to create room:', error);
-      Toast.error('Failed to create room');
+      Toast.error('Impossible de créer la salle');
       store.setConnectionState({ status: ConnectionStatus.ERROR });
     }
   }
@@ -1364,14 +1364,20 @@ export class App {
   private async handleJoinRoom(code: string, playerName: string): Promise<void> {
     try {
       store.setConnectionState({ status: ConnectionStatus.CONNECTING });
+      store.setPlayers('Waiting...', playerName);
       
       // Initialize peer connection if needed
       if (!this.peerConnection) {
         this.peerConnection = new PeerConnection();
       }
       
+      // The room code is the full peer ID of the host
+      // Users enter the short code, we need to find the full peer ID
+      // For now, we'll try to connect directly with the code as peer ID
+      const roomId = code.trim();
+      
       // Join the room (this connects to the signaling server and then to the host)
-      await this.peerConnection.joinRoom(code.toLowerCase());
+      await this.peerConnection.joinRoom(roomId);
       
       store.setRoomCode(code);
       store.setConnectionState({ status: ConnectionStatus.CONNECTED });
@@ -1384,9 +1390,14 @@ export class App {
       // Set up game sync
       this.setupGameSync();
       
+      // Start the game after successful connection
+      setTimeout(() => {
+        this.startOnlineGame();
+      }, 1000);
+      
     } catch (error) {
       console.error('Failed to join room:', error);
-      Toast.error('Failed to join room');
+      Toast.error('Impossible de rejoindre la salle. Vérifiez le code.');
       store.setConnectionState({ status: ConnectionStatus.ERROR });
     }
   }

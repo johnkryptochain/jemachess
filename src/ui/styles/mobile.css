@@ -225,10 +225,21 @@
   }
 }
 
-/* Very small phones - iPhone 4 (320px) */
+/* Very small phones - iPhone SE 2016, iPhone 4/5 (320px) */
 @media (max-width: 320px) {
+  .app-container {
+    padding: 2px !important;
+  }
+
+  .game-container {
+    gap: 2px !important;
+    padding: 0 !important;
+  }
+
   .player-card {
     padding: 3px 6px !important;
+    flex-direction: row !important;
+    gap: 4px !important;
   }
 
   .player-avatar {
@@ -238,17 +249,46 @@
   }
 
   .player-name {
-    font-size: 11px !important;
-    max-width: 60px;
+    font-size: 10px !important;
+    max-width: 50px;
+  }
+
+  .player-rating {
+    font-size: 8px !important;
   }
 
   .player-timer {
-    font-size: 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* Échiquier plus petit pour iPhone SE */
+  .chess-board {
+    width: calc(100vw - 8px) !important;
+    height: calc(100vw - 8px) !important;
+    max-width: 310px !important;
+    max-height: 310px !important;
+  }
+
+  .piece {
+    width: 80% !important;
+    height: 80% !important;
+  }
+
+  /* Boutons d'action compacts */
+  .game-actions {
+    padding: 4px !important;
+    gap: 4px !important;
+  }
+
+  .game-actions-row {
+    gap: 4px !important;
   }
 
   .icon-btn {
-    width: 32px !important;
-    height: 32px !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
   }
 
   .icon-btn svg {
@@ -257,8 +297,36 @@
   }
 
   .glass-button.danger {
-    padding: 5px 10px !important;
-    font-size: 10px !important;
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+  }
+
+  .glass-button.small {
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+  }
+
+  /* Coordonnées très petites */
+  .coordinate {
+    font-size: 6px !important;
+  }
+
+  /* Side panels ultra compacts */
+  .side-panel {
+    gap: 2px !important;
+    padding: 0 !important;
+  }
+
+  /* Toast plus petit */
+  .toast {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .toast-container {
+    bottom: 8px !important;
+    right: 8px !important;
+    left: 8px !important;
   }
 }
 
@@ -325,6 +393,101 @@
   .icon-btn {
     width: 44px !important;
     height: 44px !important;
+  }
+}
+
+/* Large foldable phones unfolded - Honor Magic V3, Samsung Fold unfolded (769px - 1200px) */
+@media (min-width: 769px) and (max-width: 1200px) {
+  .game-container {
+    display: grid !important;
+    grid-template-columns: minmax(150px, 220px) auto minmax(150px, 220px) !important;
+    gap: 20px !important;
+    padding: 20px !important;
+    max-width: 100% !important;
+    align-items: start !important;
+    flex-direction: row !important;
+  }
+
+  .side-panel {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .side-panel.left {
+    order: 1 !important;
+  }
+
+  .board-container {
+    order: 2 !important;
+  }
+
+  .side-panel.right {
+    order: 3 !important;
+  }
+
+  .chess-board {
+    width: min(65vmin, 600px) !important;
+    height: min(65vmin, 600px) !important;
+  }
+
+  .player-card {
+    padding: 14px 18px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-direction: row !important;
+  }
+
+  .player-avatar {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .player-timer {
+    font-size: 24px !important;
+  }
+
+  .game-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    padding: 16px !important;
+  }
+
+  .icon-btn {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  /* Move history visible on larger screens */
+  .move-history {
+    display: block !important;
+    max-height: 250px;
+  }
+}
+
+/* Square aspect ratio screens (foldables unfolded) */
+@media (min-aspect-ratio: 3/4) and (max-aspect-ratio: 4/3) and (min-width: 600px) {
+  .game-container {
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    gap: 24px !important;
+    padding: 24px !important;
+    align-items: center !important;
+    justify-items: center !important;
+  }
+
+  .chess-board {
+    width: min(60vmin, 550px) !important;
+    height: min(60vmin, 550px) !important;
+  }
+
+  .side-panel {
+    flex-direction: column !important;
+    justify-content: center !important;
+    height: 100% !important;
+  }
+
+  .player-card {
+    width: 200px !important;
   }
 }
 

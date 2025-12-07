@@ -436,3 +436,80 @@
     flex-direction: column;
   }
 }
+
+/* iPhone SE 2016, iPhone 4/5 (320px) */
+@media (max-width: 320px) {
+  .app-container {
+    padding: 2px;
+  }
+  
+  .game-container {
+    gap: 4px;
+    padding: 0;
+  }
+  
+  .player-card {
+    flex-direction: row;
+    text-align: left;
+    padding: 4px 6px;
+    min-width: auto;
+    max-width: none;
+    gap: 4px;
+  }
+  
+  .player-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
+  .player-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .player-name {
+    font-size: 10px;
+  }
+  
+  .player-rating {
+    font-size: 8px;
+  }
+  
+  .player-timer {
+    font-size: 11px;
+    text-align: right;
+  }
+  
+  .side-panel {
+    flex-direction: row;
+    gap: 4px;
+    padding: 0;
+  }
+  
+  .game-actions {
+    padding: 4px;
+    gap: 4px;
+  }
+  
+  .game-actions-row {
+    gap: 4px;
+    margin-bottom: 2px;
+  }
+  
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .icon-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .glass-button.danger,
+  .glass-button.small {
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+}

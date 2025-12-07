@@ -346,6 +346,35 @@
   }
 }
 
+/* iPhone SE 2016, iPhone 4/5 (320px) */
+@media (max-width: 320px) {
+  .chess-board {
+    width: calc(100vw - 8px) !important;
+    height: calc(100vw - 8px) !important;
+    max-width: 310px !important;
+    max-height: 310px !important;
+    border-radius: 8px !important;
+  }
+  
+  .promotion-option {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .board-wrapper {
+    padding: 2px;
+  }
+
+  .piece {
+    width: 80%;
+    height: 80%;
+  }
+
+  .coordinate {
+    font-size: 6px !important;
+  }
+}
+
 /* ============================================
    Fullscreen Mode - Board Only
    Optimized for all screen sizes and aspect ratios
