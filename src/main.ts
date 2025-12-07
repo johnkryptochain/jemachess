@@ -3,17 +3,19 @@
  *
  * A peer-to-peer chess game with glassmorphism UI,
  * featuring multiple piece themes and WebRTC networking.
+ *
+ * Uses ULTIMATE responsive solution 2025 for all devices.
  */
 
 import { App } from './app';
-import { initViewportDetector } from './utils/ViewportDetector';
+import { initResponsiveManager } from './utils/ResponsiveManager';
 import './ui/styles/index.css';
 
 // Application instance
 let app: App | null = null;
 
-// Viewport detector instance
-const viewportDetector = initViewportDetector();
+// Responsive manager instance (ULTIMATE 2025 solution)
+const responsiveManager = initResponsiveManager();
 
 /**
  * Initialize the application when DOM is ready
@@ -28,14 +30,19 @@ async function initializeApp(): Promise<void> {
   }
   
   try {
-    // Initialize viewport detection first
-    viewportDetector.detectAndApply();
+    // Force initial responsive state application
+    responsiveManager.forceUpdate();
     
-    // Subscribe to viewport changes for logging
-    viewportDetector.subscribe((info) => {
-      console.log('Viewport:', info.mode, `${info.width}x${info.height}`,
-        `ratio: ${info.aspectRatio.toFixed(2)}`,
-        info.isFoldable ? '(foldable)' : '');
+    // Subscribe to responsive changes for logging
+    responsiveManager.subscribe((state) => {
+      console.log(
+        '[Responsive]',
+        state.deviceType,
+        `${state.width}x${state.height}`,
+        `board: ${state.optimalBoardSize}px`,
+        state.isPortrait ? 'portrait' : 'landscape',
+        state.isFoldable ? '(foldable)' : ''
+      );
     });
     
     // Create and initialize the app

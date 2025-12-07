@@ -1,0 +1,711 @@
+/**
+ * ULTIMATE RESPONSIVE SOLUTION 2025
+ * 
+ * This is the most robust responsive solution using:
+ * - CSS Container Queries (for component-based responsive)
+ * - CSS Layers (for proper cascade management)
+ * - Dynamic Viewport Units (dvh, svh, lvh)
+ * - CSS clamp() for fluid sizing
+ * - aspect-ratio for perfect squares
+ * - JavaScript-based viewport detection as fallback
+ * 
+ * Supports ALL devices:
+ * - iPhone 4/5/SE to iPhone 15 Pro Max
+ * - Samsung Galaxy S8 to S24 Ultra
+ * - Honor Magic V2/V3/V5 (foldable)
+ * - Samsung Galaxy Z Fold 3/4/5 (foldable)
+ * - Oppo Find N2/N3 (foldable)
+ * - All tablets and desktops
+ */
+
+/* ============================================
+   CSS LAYERS - Proper cascade management
+   ============================================ */
+@layer reset, base, layout, components, responsive, utilities;
+
+/* ============================================
+   BASE LAYER - Core responsive variables
+   ============================================ */
+@layer base {
+  :root {
+    /* Dynamic viewport units with fallbacks */
+    --vh: 1vh;
+    --dvh: 1dvh;
+    --svh: 1svh;
+    
+    /* Safe area insets */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    
+    /* Responsive spacing using clamp */
+    --space-xs: clamp(2px, 0.5vmin, 4px);
+    --space-sm: clamp(4px, 1vmin, 8px);
+    --space-md: clamp(8px, 2vmin, 16px);
+    --space-lg: clamp(12px, 3vmin, 24px);
+    --space-xl: clamp(16px, 4vmin, 32px);
+    
+    /* Board size - calculated by JavaScript, with CSS fallback */
+    --board-size: min(
+      calc(100vw - var(--space-md) * 2),
+      calc(100dvh - 200px),
+      560px
+    );
+    
+    /* Font sizes using clamp */
+    --text-xs: clamp(9px, 2vmin, 11px);
+    --text-sm: clamp(10px, 2.5vmin, 13px);
+    --text-md: clamp(12px, 3vmin, 16px);
+    --text-lg: clamp(14px, 3.5vmin, 20px);
+    --text-xl: clamp(16px, 4vmin, 24px);
+    
+    /* Touch target minimum (WCAG 2.2) */
+    --touch-target: max(44px, 11vmin);
+  }
+}
+
+/* ============================================
+   LAYOUT LAYER - Container setup
+   ============================================ */
+@layer layout {
+  /* Enable container queries on game container */
+  .game-container {
+    container-type: inline-size;
+    container-name: game;
+  }
+  
+  .board-container {
+    container-type: inline-size;
+    container-name: board;
+  }
+  
+  .side-panel {
+    container-type: inline-size;
+    container-name: panel;
+  }
+}
+
+/* ============================================
+   COMPONENTS LAYER - Base component styles
+   ============================================ */
+@layer components {
+  /* Chess board with perfect aspect ratio */
+  .chess-board {
+    aspect-ratio: 1 / 1;
+    width: var(--board-size, min(80vmin, 560px));
+    height: auto;
+    max-width: 100%;
+    contain: layout style paint;
+  }
+  
+  /* Player cards */
+  .player-card {
+    min-height: var(--touch-target);
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  /* Icon buttons with minimum touch target */
+  .icon-btn {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    width: clamp(36px, 10vmin, 48px);
+    height: clamp(36px, 10vmin, 48px);
+  }
+}
+
+/* ============================================
+   RESPONSIVE LAYER - Container Queries
+   ============================================ */
+@layer responsive {
+  
+  /* ========== EXTRA SMALL CONTAINERS (< 320px) ========== */
+  @container game (max-width: 319px) {
+    .game-container {
+      gap: var(--space-xs) !important;
+      padding: var(--space-xs) !important;
+    }
+    
+    .chess-board {
+      --board-size: calc(100cqw - 8px);
+      max-width: 300px;
+      max-height: 300px;
+    }
+    
+    .player-card {
+      padding: 3px 6px !important;
+    }
+    
+    .player-avatar {
+      width: 24px !important;
+      height: 24px !important;
+    }
+    
+    .player-name {
+      font-size: var(--text-xs) !important;
+    }
+    
+    .player-timer {
+      font-size: var(--text-sm) !important;
+    }
+    
+    .icon-btn {
+      width: 30px !important;
+      height: 30px !important;
+      min-width: 30px !important;
+      min-height: 30px !important;
+    }
+  }
+  
+  /* ========== SMALL CONTAINERS (320px - 374px) ========== */
+  @container game (min-width: 320px) and (max-width: 374px) {
+    .game-container {
+      gap: var(--space-xs) !important;
+      padding: var(--space-xs) !important;
+    }
+    
+    .chess-board {
+      --board-size: calc(100cqw - 12px);
+      max-width: 340px;
+      max-height: 340px;
+    }
+    
+    .player-card {
+      padding: 4px 8px !important;
+    }
+    
+    .player-avatar {
+      width: 28px !important;
+      height: 28px !important;
+    }
+    
+    .player-timer {
+      font-size: var(--text-md) !important;
+    }
+    
+    .icon-btn {
+      width: 34px !important;
+      height: 34px !important;
+    }
+  }
+  
+  /* ========== MEDIUM CONTAINERS (375px - 430px) ========== */
+  @container game (min-width: 375px) and (max-width: 430px) {
+    .game-container {
+      gap: var(--space-sm) !important;
+      padding: var(--space-sm) !important;
+    }
+    
+    .chess-board {
+      --board-size: calc(100cqw - 16px);
+      max-width: 380px;
+      max-height: 380px;
+    }
+    
+    .player-card {
+      padding: 6px 10px !important;
+    }
+    
+    .player-avatar {
+      width: 32px !important;
+      height: 32px !important;
+    }
+    
+    .player-timer {
+      font-size: var(--text-lg) !important;
+    }
+    
+    .icon-btn {
+      width: 38px !important;
+      height: 38px !important;
+    }
+  }
+  
+  /* ========== LARGE PHONE CONTAINERS (431px - 600px) ========== */
+  @container game (min-width: 431px) and (max-width: 600px) {
+    .game-container {
+      gap: var(--space-md) !important;
+      padding: var(--space-md) !important;
+    }
+    
+    .chess-board {
+      --board-size: min(calc(100cqw - 24px), 450px);
+    }
+    
+    .player-card {
+      padding: 8px 12px !important;
+    }
+    
+    .player-avatar {
+      width: 36px !important;
+      height: 36px !important;
+    }
+    
+    .icon-btn {
+      width: 42px !important;
+      height: 42px !important;
+    }
+  }
+  
+  /* ========== TABLET/FOLDABLE UNFOLDED (601px - 900px) ========== */
+  @container game (min-width: 601px) and (max-width: 900px) {
+    .game-container {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: var(--space-md) !important;
+      padding: var(--space-md) !important;
+    }
+    
+    .chess-board {
+      --board-size: min(calc(100cqw - 32px), 520px);
+    }
+    
+    .side-panel {
+      flex-direction: row !important;
+      justify-content: center !important;
+      width: 100% !important;
+      gap: var(--space-lg) !important;
+    }
+    
+    .player-card {
+      padding: 10px 16px !important;
+      max-width: 220px !important;
+    }
+    
+    .player-avatar {
+      width: 40px !important;
+      height: 40px !important;
+    }
+    
+    .icon-btn {
+      width: 44px !important;
+      height: 44px !important;
+    }
+  }
+  
+  /* ========== LARGE TABLET/FOLDABLE (901px - 1100px) ========== */
+  @container game (min-width: 901px) and (max-width: 1100px) {
+    .game-container {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: var(--space-lg) !important;
+      padding: var(--space-lg) !important;
+    }
+    
+    .chess-board {
+      --board-size: min(calc(100cqw * 0.65), 580px);
+    }
+    
+    .side-panel {
+      flex-direction: row !important;
+      justify-content: center !important;
+      width: 100% !important;
+      gap: var(--space-xl) !important;
+    }
+    
+    .player-card {
+      padding: 12px 20px !important;
+      max-width: 260px !important;
+    }
+    
+    .player-avatar {
+      width: 44px !important;
+      height: 44px !important;
+    }
+    
+    .icon-btn {
+      width: 48px !important;
+      height: 48px !important;
+    }
+  }
+  
+  /* ========== DESKTOP (> 1100px) ========== */
+  @container game (min-width: 1101px) {
+    .game-container {
+      display: grid !important;
+      grid-template-columns: minmax(200px, 280px) auto minmax(200px, 280px) !important;
+      gap: var(--space-xl) !important;
+      padding: var(--space-xl) !important;
+      align-items: start !important;
+    }
+    
+    .chess-board {
+      --board-size: min(calc(100cqw * 0.5), 600px);
+    }
+    
+    .side-panel {
+      flex-direction: column !important;
+      width: auto !important;
+    }
+    
+    .side-panel.left {
+      align-items: flex-end !important;
+    }
+    
+    .side-panel.right {
+      align-items: flex-start !important;
+    }
+    
+    .player-card {
+      padding: 14px 24px !important;
+      min-width: 200px !important;
+    }
+    
+    .player-avatar {
+      width: 48px !important;
+      height: 48px !important;
+    }
+    
+    .icon-btn {
+      width: 48px !important;
+      height: 48px !important;
+    }
+  }
+}
+
+/* ============================================
+   UTILITIES LAYER - Highest priority overrides
+   ============================================ */
+@layer utilities {
+  
+  /* Force vertical layout on mobile */
+  .force-vertical {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Force horizontal layout */
+  .force-horizontal {
+    display: flex !important;
+    flex-direction: row !important;
+  }
+  
+  /* Hide on mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  /* Show on mobile */
+  .show-mobile {
+    display: flex !important;
+  }
+  
+  /* Safe area padding */
+  .safe-area-padding {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
+  }
+}
+
+/* ============================================
+   FALLBACK MEDIA QUERIES
+   For browsers that don't support container queries
+   ============================================ */
+@supports not (container-type: inline-size) {
+  
+  /* Small phones */
+  @media (max-width: 374px) {
+    .game-container {
+      gap: 4px !important;
+      padding: 4px !important;
+    }
+    
+    .chess-board {
+      width: calc(100vw - 12px) !important;
+      height: calc(100vw - 12px) !important;
+      max-width: 340px !important;
+      max-height: 340px !important;
+    }
+  }
+  
+  /* Medium phones */
+  @media (min-width: 375px) and (max-width: 430px) {
+    .game-container {
+      gap: 6px !important;
+      padding: 6px !important;
+    }
+    
+    .chess-board {
+      width: calc(100vw - 16px) !important;
+      height: calc(100vw - 16px) !important;
+      max-width: 380px !important;
+      max-height: 380px !important;
+    }
+  }
+  
+  /* Large phones */
+  @media (min-width: 431px) and (max-width: 600px) {
+    .chess-board {
+      width: min(calc(100vw - 24px), 450px) !important;
+      height: min(calc(100vw - 24px), 450px) !important;
+    }
+  }
+  
+  /* Tablets */
+  @media (min-width: 601px) and (max-width: 1100px) {
+    .game-container {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+    }
+    
+    .chess-board {
+      width: min(65vmin, 560px) !important;
+      height: min(65vmin, 560px) !important;
+    }
+    
+    .side-panel {
+      flex-direction: row !important;
+      width: 100% !important;
+      justify-content: center !important;
+    }
+  }
+  
+  /* Desktop */
+  @media (min-width: 1101px) {
+    .game-container {
+      display: grid !important;
+      grid-template-columns: minmax(200px, 280px) auto minmax(200px, 280px) !important;
+    }
+    
+    .chess-board {
+      width: min(80vmin, 600px) !important;
+      height: min(80vmin, 600px) !important;
+    }
+    
+    .side-panel {
+      flex-direction: column !important;
+    }
+  }
+}
+
+/* ============================================
+   DYNAMIC VIEWPORT HEIGHT FIX
+   For mobile browsers with dynamic toolbars
+   ============================================ */
+@supports (height: 100dvh) {
+  .app-container {
+    min-height: 100dvh;
+  }
+  
+  .game-container {
+    min-height: calc(100dvh - var(--space-md) * 2);
+    max-height: 100dvh;
+  }
+}
+
+@supports not (height: 100dvh) {
+  .app-container {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  .game-container {
+    min-height: calc(100vh - 16px);
+    min-height: calc(-webkit-fill-available - 16px);
+  }
+}
+
+/* ============================================
+   ASPECT RATIO BASED LAYOUTS
+   For foldable phones with square-ish screens
+   ============================================ */
+
+/* Square-ish screens (foldables unfolded) */
+@media (min-aspect-ratio: 3/4) and (max-aspect-ratio: 4/3) and (min-width: 600px) {
+  .game-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .chess-board {
+    width: min(65vmin, 580px) !important;
+    height: min(65vmin, 580px) !important;
+  }
+  
+  .side-panel {
+    flex-direction: row !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+  
+  .board-container {
+    order: 2 !important;
+  }
+  
+  .side-panel.left {
+    order: 1 !important;
+  }
+  
+  .side-panel.right {
+    order: 3 !important;
+  }
+}
+
+/* Tall screens (phones in portrait) */
+@media (max-aspect-ratio: 3/4) {
+  .game-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .side-panel {
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* Wide screens (landscape) */
+@media (min-aspect-ratio: 4/3) and (min-width: 600px) {
+  .game-container {
+    display: grid !important;
+    grid-template-columns: 1fr auto 1fr !important;
+    align-items: center !important;
+  }
+  
+  .side-panel {
+    flex-direction: column !important;
+  }
+}
+
+/* ============================================
+   ORIENTATION SPECIFIC STYLES
+   ============================================ */
+
+/* Portrait orientation */
+@media (orientation: portrait) {
+  .game-container {
+    flex-direction: column !important;
+  }
+  
+  .side-panel {
+    flex-direction: row !important;
+    width: 100% !important;
+  }
+}
+
+/* Landscape orientation on phones */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-container {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    padding: var(--space-xs) !important;
+  }
+  
+  .chess-board {
+    width: min(90vh, 90dvh, 400px) !important;
+    height: min(90vh, 90dvh, 400px) !important;
+  }
+  
+  .side-panel {
+    flex-direction: column !important;
+    width: auto !important;
+    max-width: 120px !important;
+  }
+  
+  .player-card {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: var(--space-xs) !important;
+  }
+  
+  .game-actions {
+    flex-direction: column !important;
+    padding: var(--space-xs) !important;
+  }
+}
+
+/* ============================================
+   JAVASCRIPT VIEWPORT CLASSES
+   Applied by ViewportDetector for maximum reliability
+   ============================================ */
+
+/* These classes override everything when applied */
+html.viewport-phone-small .chess-board,
+body.viewport-phone-small .chess-board {
+  width: var(--optimal-board-size, 300px) !important;
+  height: var(--optimal-board-size, 300px) !important;
+}
+
+html.viewport-phone-medium .chess-board,
+body.viewport-phone-medium .chess-board {
+  width: var(--optimal-board-size, 340px) !important;
+  height: var(--optimal-board-size, 340px) !important;
+}
+
+html.viewport-phone-large .chess-board,
+body.viewport-phone-large .chess-board {
+  width: var(--optimal-board-size, 380px) !important;
+  height: var(--optimal-board-size, 380px) !important;
+}
+
+html.viewport-foldable-folded .chess-board,
+body.viewport-foldable-folded .chess-board {
+  width: var(--optimal-board-size, 320px) !important;
+  height: var(--optimal-board-size, 320px) !important;
+}
+
+html.viewport-foldable-unfolded .chess-board,
+body.viewport-foldable-unfolded .chess-board {
+  width: var(--optimal-board-size, 520px) !important;
+  height: var(--optimal-board-size, 520px) !important;
+}
+
+html.viewport-tablet .chess-board,
+body.viewport-tablet .chess-board {
+  width: var(--optimal-board-size, 500px) !important;
+  height: var(--optimal-board-size, 500px) !important;
+}
+
+html.viewport-desktop .chess-board,
+body.viewport-desktop .chess-board {
+  width: var(--optimal-board-size, 560px) !important;
+  height: var(--optimal-board-size, 560px) !important;
+}
+
+/* ============================================
+   GAME ACTIONS VISIBILITY FIX
+   Ensure buttons are always visible
+   ============================================ */
+.game-actions {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.game-actions-row {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+.icon-btn {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+  .game-actions,
+  .chat-overlay,
+  .toast-container {
+    display: none !important;
+  }
+  
+  .chess-board {
+    width: 400px !important;
+    height: 400px !important;
+    box-shadow: none !important;
+  }
+}

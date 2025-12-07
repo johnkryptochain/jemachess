@@ -5,6 +5,7 @@
  * - ChessTimer: Chess clock with increment support
  * - SoundManager: Game sound effects management
  * - AudioGenerator: Web Audio API sound synthesis
+ * - ResponsiveManager: ULTIMATE responsive solution 2025
  */
 
 // Timer utilities
@@ -41,10 +42,18 @@ export {
   type BeforeInstallPromptEvent
 } from './pwa';
 
-// Viewport detection utilities
+// Viewport detection utilities (legacy)
 export {
   getViewportDetector,
   initViewportDetector,
   type DeviceMode,
   type ViewportInfo
 } from './ViewportDetector';
+
+// ULTIMATE Responsive Manager 2025
+export {
+  getResponsiveManager,
+  initResponsiveManager,
+  type DeviceType,
+  type ResponsiveState
+} from './ResponsiveManager';

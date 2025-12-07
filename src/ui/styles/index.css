@@ -3,7 +3,7 @@
  */
 
 /* Chess Game - Glassmorphism UI Styles
- * Modern design system
+ * Modern design system with ULTIMATE responsive solution 2025
  * Primary color: #7d82ea
  */
 
@@ -17,3 +17,5 @@
 @import './landing.css';
 @import './chat.css';
 @import './mobile.css';
+/* ULTIMATE responsive solution - must be last to override everything */
+@import './responsive-ultimate.css';
