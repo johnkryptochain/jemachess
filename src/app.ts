@@ -374,6 +374,11 @@ export class App {
    * Restore game state from session
    */
   private restoreGameFromSession(session: any): void {
+    // Hide global chat during online games
+    if (this.chat) {
+      this.chat.hide();
+    }
+    
     // Start online game with restored state
     store.startNewGame('online', {
       initial: session.whiteTime,
@@ -1301,6 +1306,11 @@ export class App {
    * @param playerName Optional player name for session saving
    */
   private startOnlineGame(isHost: boolean = false, playerName?: string): void {
+    // Hide global chat during online games (only game chat should be visible)
+    if (this.chat) {
+      this.chat.hide();
+    }
+    
     // Start new game in store
     store.startNewGame('online', {
       initial: TIME_CONTROLS.RAPID_10_0.initialTime,
@@ -1606,6 +1616,12 @@ export class App {
     // Stop timer
     if (this.timer) {
       this.timer.stop();
+    }
+    
+    // Show global chat again when leaving online game
+    // (it was hidden during online play)
+    if (this.chat) {
+      this.chat.show();
     }
     
     // Disconnect from online game
