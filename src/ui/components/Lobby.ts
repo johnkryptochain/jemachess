@@ -76,7 +76,7 @@ export class Lobby {
     if (!this.lobbyElement) return;
 
     // Header with back button
-    const header = this.createHeader('Play Online');
+    const header = this.createHeader('Jouer en ligne');
     this.lobbyElement.appendChild(header);
 
     // Mode selection cards
@@ -94,8 +94,8 @@ export class Lobby {
           <line x1="8" y1="12" x2="16" y2="12"/>
         </svg>
       </div>
-      <div class="mode-title">Create Room</div>
-      <div class="mode-description">Create a new game room and invite a friend</div>
+      <div class="mode-title">Créer une salle</div>
+      <div class="mode-description">Créez une nouvelle partie et invitez un ami</div>
     `;
     createCard.addEventListener('click', () => {
       this.showCreateRoom();
@@ -113,8 +113,8 @@ export class Lobby {
           <line x1="15" y1="12" x2="3" y2="12"/>
         </svg>
       </div>
-      <div class="mode-title">Join Room</div>
-      <div class="mode-description">Join an existing game with a room code</div>
+      <div class="mode-title">Rejoindre une salle</div>
+      <div class="mode-description">Rejoignez une partie avec un code de salle</div>
     `;
     joinCard.addEventListener('click', () => {
       this.showJoinRoom();
@@ -131,7 +131,7 @@ export class Lobby {
     if (!this.lobbyElement) return;
 
     // Header
-    const header = this.createHeader('Create Room', () => {
+    const header = this.createHeader('Créer une salle', () => {
       this.mode = 'select';
       this.render();
     });
@@ -144,13 +144,13 @@ export class Lobby {
     // Player name input
     const nameLabel = document.createElement('label');
     nameLabel.className = 'settings-label';
-    nameLabel.textContent = 'Your Name';
+    nameLabel.textContent = 'Votre nom';
     form.appendChild(nameLabel);
 
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.className = 'glass-input';
-    nameInput.placeholder = 'Enter your name';
+    nameInput.placeholder = 'Entrez votre nom';
     nameInput.value = this.playerName;
     nameInput.maxLength = 20;
     nameInput.addEventListener('input', (e) => {
@@ -161,10 +161,10 @@ export class Lobby {
     // Create button
     const createBtn = document.createElement('button');
     createBtn.className = 'glass-button primary';
-    createBtn.textContent = 'Create Room';
+    createBtn.textContent = 'Créer la salle';
     createBtn.addEventListener('click', () => {
       if (!this.playerName.trim()) {
-        Toast.warning('Please enter your name');
+        Toast.warning('Veuillez entrer votre nom');
         return;
       }
       
@@ -191,7 +191,7 @@ export class Lobby {
     if (!this.lobbyElement) return;
 
     // Header
-    const header = this.createHeader('Join Room', () => {
+    const header = this.createHeader('Rejoindre une salle', () => {
       this.mode = 'select';
       this.render();
     });
@@ -204,13 +204,13 @@ export class Lobby {
     // Room code input
     const codeLabel = document.createElement('label');
     codeLabel.className = 'settings-label';
-    codeLabel.textContent = 'Room Code';
+    codeLabel.textContent = 'Code de la salle';
     form.appendChild(codeLabel);
 
     const codeInput = document.createElement('input');
     codeInput.type = 'text';
     codeInput.className = 'glass-input room-code-input';
-    codeInput.placeholder = 'Enter room code (e.g., abc123-def456...)';
+    codeInput.placeholder = 'Entrez le code (ex: abc123-def456...)';
     codeInput.value = this.roomCode;
     codeInput.maxLength = 50;
     codeInput.style.fontSize = '14px';
@@ -232,7 +232,7 @@ export class Lobby {
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
       </svg>
-      Paste Code
+      Coller le code
     `;
     pasteBtn.addEventListener('click', async () => {
       try {
@@ -240,10 +240,10 @@ export class Lobby {
         if (text) {
           codeInput.value = text.trim();
           this.roomCode = text.trim();
-          Toast.success('Code pasted!');
+          Toast.success('Code collé !');
         }
       } catch (e) {
-        Toast.error('Cannot access clipboard');
+        Toast.error('Impossible d\'accéder au presse-papiers');
       }
     });
     form.appendChild(pasteBtn);
@@ -252,13 +252,13 @@ export class Lobby {
     const nameLabel = document.createElement('label');
     nameLabel.className = 'settings-label';
     nameLabel.style.marginTop = 'var(--spacing-md)';
-    nameLabel.textContent = 'Your Name';
+    nameLabel.textContent = 'Votre nom';
     form.appendChild(nameLabel);
 
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.className = 'glass-input';
-    nameInput.placeholder = 'Enter your name';
+    nameInput.placeholder = 'Entrez votre nom';
     nameInput.value = this.playerName;
     nameInput.maxLength = 20;
     nameInput.addEventListener('input', (e) => {
@@ -269,14 +269,14 @@ export class Lobby {
     // Join button
     const joinBtn = document.createElement('button');
     joinBtn.className = 'glass-button primary';
-    joinBtn.textContent = 'Join Room';
+    joinBtn.textContent = 'Rejoindre';
     joinBtn.addEventListener('click', () => {
       if (!this.roomCode.trim()) {
-        Toast.warning('Please enter a room code');
+        Toast.warning('Veuillez entrer un code de salle');
         return;
       }
       if (!this.playerName.trim()) {
-        Toast.warning('Please enter your name');
+        Toast.warning('Veuillez entrer votre nom');
         return;
       }
       
@@ -304,7 +304,7 @@ export class Lobby {
     if (!this.lobbyElement) return;
 
     // Header
-    const header = this.createHeader('Game Room');
+    const header = this.createHeader('Salle de jeu');
     this.lobbyElement.appendChild(header);
 
     // Room code display
@@ -314,7 +314,7 @@ export class Lobby {
 
       const codeLabel = document.createElement('div');
       codeLabel.className = 'room-code-label';
-      codeLabel.textContent = 'Room Code';
+      codeLabel.textContent = 'Code de la salle';
       codeSection.appendChild(codeLabel);
 
       const codeDisplay = document.createElement('div');
@@ -329,13 +329,13 @@ export class Lobby {
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
         </svg>
-        Copy code
+        Copier le code
       `;
       copyBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(this.roomCode).then(() => {
-          Toast.success('Room code copied!');
+          Toast.success('Code copié !');
         }).catch(() => {
-          Toast.error('Failed to copy');
+          Toast.error('Échec de la copie');
         });
       });
       codeSection.appendChild(copyBtn);
@@ -349,7 +349,7 @@ export class Lobby {
 
     const playerListTitle = document.createElement('div');
     playerListTitle.className = 'player-list-title';
-    playerListTitle.textContent = 'Players';
+    playerListTitle.textContent = 'Joueurs';
     playerList.appendChild(playerListTitle);
 
     if (this.players.length === 0) {
@@ -357,7 +357,7 @@ export class Lobby {
       waiting.className = 'lobby-waiting';
       waiting.innerHTML = `
         <div class="spinner"></div>
-        <div class="lobby-waiting-text">Waiting for opponent...</div>
+        <div class="lobby-waiting-text">En attente d'un adversaire...</div>
       `;
       playerList.appendChild(waiting);
     } else {
@@ -377,7 +377,7 @@ export class Lobby {
         if (player.color) {
           const badge = document.createElement('div');
           badge.className = 'player-item-badge';
-          badge.textContent = player.color === PieceColor.WHITE ? 'White' : 'Black';
+          badge.textContent = player.color === PieceColor.WHITE ? 'Blancs' : 'Noirs';
           playerItem.appendChild(badge);
         }
 
@@ -395,7 +395,7 @@ export class Lobby {
     if (this.players.length >= 2) {
       const readyBtn = document.createElement('button');
       readyBtn.className = 'glass-button primary';
-      readyBtn.textContent = 'Ready';
+      readyBtn.textContent = 'Prêt';
       readyBtn.addEventListener('click', () => {
         if (this.onReady) {
           this.onReady();
@@ -407,7 +407,7 @@ export class Lobby {
     // Leave button
     const leaveBtn = document.createElement('button');
     leaveBtn.className = 'glass-button danger';
-    leaveBtn.textContent = 'Leave';
+    leaveBtn.textContent = 'Quitter';
     leaveBtn.addEventListener('click', () => {
       if (this.onLeave) {
         this.onLeave();

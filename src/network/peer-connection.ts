@@ -26,11 +26,36 @@ import {
 export type PeerConfig = PeerOptions;
 
 /**
+ * PeerJS server configurations with fallbacks
+ */
+const PEER_SERVERS: PeerConfig[] = [
+  // Primary: PeerJS Cloud (0.peerjs.com)
+  {
+    debug: 1,
+    host: '0.peerjs.com',
+    port: 443,
+    secure: true,
+    path: '/',
+    key: 'peerjs',
+  },
+  // Fallback 1: Alternative PeerJS server
+  {
+    debug: 1,
+    host: 'peerjs-server.herokuapp.com',
+    port: 443,
+    secure: true,
+    path: '/',
+  },
+  // Fallback 2: Default PeerJS (auto-selects server)
+  {
+    debug: 1,
+  },
+];
+
+/**
  * Default PeerJS configuration (uses free PeerJS cloud server)
  */
-const DEFAULT_PEER_CONFIG: PeerConfig = {
-  debug: 1, // 0 = no logs, 1 = errors, 2 = warnings, 3 = all
-};
+const DEFAULT_PEER_CONFIG: PeerConfig = PEER_SERVERS[0];
 
 /**
  * Connection timeouts and intervals
@@ -55,6 +80,9 @@ export class PeerConnection {
   private roomId: string = '';
   private isHost: boolean = false;
   private peerId: string = '';
+  
+  // Server fallback management
+  private currentServerIndex: number = 0;
   
   // Heartbeat management
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -100,20 +128,50 @@ export class PeerConnection {
   /**
    * Create a new room as host
    * Returns the room ID (which is the peer ID)
+   * Tries multiple servers with fallback
    */
   async createRoom(): Promise<string> {
     this.isHost = true;
     this.updateState({ status: ConnectionStatus.CONNECTING });
     
+    // Try each server in order
+    for (let i = 0; i < PEER_SERVERS.length; i++) {
+      this.currentServerIndex = i;
+      const serverConfig = PEER_SERVERS[i];
+      
+      try {
+        console.log(`Trying PeerJS server ${i + 1}/${PEER_SERVERS.length}:`, serverConfig.host || 'default');
+        const roomId = await this.tryCreateRoom(serverConfig);
+        return roomId;
+      } catch (error) {
+        console.warn(`Server ${i + 1} failed:`, error);
+        // Clean up before trying next server
+        this.cleanupPeer();
+        
+        // If this was the last server, throw the error
+        if (i === PEER_SERVERS.length - 1) {
+          this.updateState({ status: ConnectionStatus.ERROR });
+          throw new Error('Impossible de se connecter au serveur. Veuillez réessayer.');
+        }
+      }
+    }
+    
+    throw new Error('Impossible de créer la salle');
+  }
+  
+  /**
+   * Try to create a room with a specific server config
+   */
+  private tryCreateRoom(serverConfig: PeerConfig): Promise<string> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        reject(new Error('Connection timeout while creating room'));
-        this.cleanup();
-      }, CONNECTION_TIMEOUT);
+        reject(new Error('Délai de connexion dépassé'));
+        this.cleanupPeer();
+      }, CONNECTION_TIMEOUT / PEER_SERVERS.length); // Shorter timeout per server
       
       try {
         // Create peer with random ID
-        this.peer = new Peer(this.config);
+        this.peer = new Peer(serverConfig);
         
         this.peer.on('open', (id: string) => {
           clearTimeout(timeoutId);
@@ -132,7 +190,6 @@ export class PeerConnection {
         
         this.peer.on('error', (err: Error) => {
           clearTimeout(timeoutId);
-          this.handleError(err);
           reject(err);
         });
         
@@ -144,7 +201,22 @@ export class PeerConnection {
   }
   
   /**
+   * Clean up peer without full cleanup
+   */
+  private cleanupPeer(): void {
+    if (this.peer) {
+      try {
+        this.peer.destroy();
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
+      this.peer = null;
+    }
+  }
+  
+  /**
    * Join an existing room as guest
+   * Tries multiple servers with fallback
    */
   async joinRoom(roomId: string): Promise<void> {
     this.isHost = false;
@@ -152,15 +224,44 @@ export class PeerConnection {
     this.lastKnownPeerId = roomId;
     this.updateState({ status: ConnectionStatus.CONNECTING, roomId });
     
+    // Try each server in order
+    for (let i = 0; i < PEER_SERVERS.length; i++) {
+      this.currentServerIndex = i;
+      const serverConfig = PEER_SERVERS[i];
+      
+      try {
+        console.log(`Trying PeerJS server ${i + 1}/${PEER_SERVERS.length}:`, serverConfig.host || 'default');
+        await this.tryJoinRoom(roomId, serverConfig);
+        return;
+      } catch (error) {
+        console.warn(`Server ${i + 1} failed:`, error);
+        // Clean up before trying next server
+        this.cleanupPeer();
+        
+        // If this was the last server, throw the error
+        if (i === PEER_SERVERS.length - 1) {
+          this.updateState({ status: ConnectionStatus.ERROR });
+          throw new Error('Impossible de rejoindre la salle. Vérifiez le code.');
+        }
+      }
+    }
+    
+    throw new Error('Impossible de rejoindre la salle');
+  }
+  
+  /**
+   * Try to join a room with a specific server config
+   */
+  private tryJoinRoom(roomId: string, serverConfig: PeerConfig): Promise<void> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        reject(new Error('Connection timeout while joining room'));
-        this.cleanup();
-      }, CONNECTION_TIMEOUT);
+        reject(new Error('Délai de connexion dépassé'));
+        this.cleanupPeer();
+      }, CONNECTION_TIMEOUT / PEER_SERVERS.length); // Shorter timeout per server
       
       try {
         // Create peer with random ID
-        this.peer = new Peer(this.config);
+        this.peer = new Peer(serverConfig);
         
         this.peer.on('open', (id: string) => {
           this.peerId = id;
@@ -184,7 +285,6 @@ export class PeerConnection {
         
         this.peer.on('error', (err: Error) => {
           clearTimeout(timeoutId);
-          this.handleError(err);
           reject(err);
         });
         
