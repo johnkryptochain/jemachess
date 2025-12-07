@@ -1,11 +1,12 @@
 /**
- * Chat Component - Global P2P Chat Room
+ * Chat Component - Global Decentralized Chat Room
  * 
- * A peer-to-peer chat system using PeerJS for WebRTC connections.
- * Uses a mesh network approach where each peer connects to all others.
+ * A decentralized chat system using Gun.js for real-time P2P synchronization.
+ * No server required - uses public Gun relay peers for discovery.
  */
 
-import Peer, { DataConnection } from 'peerjs';
+import Gun from 'gun';
+import 'gun/sea';
 
 // ============================================
 // Types
@@ -20,19 +21,18 @@ interface ChatMessage {
   type: 'message' | 'system' | 'join' | 'leave';
 }
 
-interface ChatPeer {
+interface ChatUser {
   id: string;
   name: string;
-  connection: DataConnection | null;
   lastSeen: number;
 }
 
 interface ChatState {
   isConnected: boolean;
   isConnecting: boolean;
-  localPeerId: string;
+  localUserId: string;
   localName: string;
-  peers: Map<string, ChatPeer>;
+  users: Map<string, ChatUser>;
   messages: ChatMessage[];
 }
 
@@ -40,16 +40,18 @@ interface ChatState {
 // Constants
 // ============================================
 
-// Public room ID prefix - all peers will try to connect to peers with this prefix
-const ROOM_PREFIX = 'chess-chat-global-';
-const MAX_PEERS = 50;
-const PEER_DISCOVERY_INTERVAL = 10000; // 10 seconds
-const HEARTBEAT_INTERVAL = 30000; // 30 seconds
-const PEER_TIMEOUT = 60000; // 1 minute
+// Global chat room identifier
+const CHAT_ROOM_ID = 'chess-game-global-chat-v1';
 const MAX_MESSAGES = 200;
+const USER_TIMEOUT = 120000; // 2 minutes
+const PRESENCE_INTERVAL = 30000; // 30 seconds
 
-// List of known peer IDs to try connecting to (bootstrap nodes)
-const BOOTSTRAP_PEER_COUNT = 10;
+// Public Gun relay peers for discovery (no account needed)
+const GUN_PEERS = [
+  'https://gun-manhattan.herokuapp.com/gun',
+  'https://gun-us.herokuapp.com/gun',
+  'https://gun-eu.herokuapp.com/gun'
+];
 
 // ============================================
 // Chat Class
@@ -60,22 +62,25 @@ export class Chat {
   private chatElement: HTMLElement | null = null;
   private chatContainer: HTMLElement | null = null;
   private toggleBtn: HTMLElement | null = null;
-  private peer: Peer | null = null;
+  private gun: any = null;
+  private chatRoom: any = null;
+  private usersNode: any = null;
   private isOpen: boolean = false;
   private unreadCount: number = 0;
   private state: ChatState = {
     isConnected: false,
     isConnecting: false,
-    localPeerId: '',
+    localUserId: '',
     localName: '',
-    peers: new Map(),
+    users: new Map(),
     messages: []
   };
   
-  private discoveryInterval: ReturnType<typeof setInterval> | null = null;
-  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private presenceInterval: ReturnType<typeof setInterval> | null = null;
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null;
   private messageListElement: HTMLElement | null = null;
   private inputElement: HTMLInputElement | null = null;
+  private seenMessageIds: Set<string> = new Set();
   
   // Callbacks
   public onClose: (() => void) | null = null;
@@ -109,7 +114,7 @@ export class Chat {
             </svg>
             <h2>Chat Global</h2>
             <span class="chat-status ${this.state.isConnected ? 'connected' : this.state.isConnecting ? 'connecting' : 'disconnected'}">
-              ${this.state.isConnected ? `${this.state.peers.size + 1} en ligne` : this.state.isConnecting ? 'Connexion...' : 'Déconnecté'}
+              ${this.state.isConnected ? `${this.state.users.size + 1} en ligne` : this.state.isConnecting ? 'Connexion...' : 'Déconnecté'}
             </span>
           </div>
           <button class="chat-close-btn" aria-label="Réduire">
@@ -216,7 +221,7 @@ export class Chat {
   }
   
   /**
-   * Connect to the chat network
+   * Connect to the chat network using Gun.js
    */
   async connect(playerName: string): Promise<void> {
     if (this.state.isConnecting || this.state.isConnected) return;
@@ -226,48 +231,49 @@ export class Chat {
     this.render();
     
     try {
-      // Generate a unique peer ID
-      const peerId = this.generatePeerId();
+      // Generate a unique user ID
+      this.state.localUserId = this.generateUserId();
       
-      // Create peer connection
-      this.peer = new Peer(peerId, {
-        debug: 1
+      // Initialize Gun with public relay peers
+      this.gun = Gun({
+        peers: GUN_PEERS,
+        localStorage: false, // Use memory only to avoid conflicts
+        radisk: false
       });
       
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Connection timeout'));
-        }, 30000);
-        
-        this.peer!.on('open', (id) => {
-          clearTimeout(timeout);
-          this.state.localPeerId = id;
-          this.state.isConnected = true;
-          this.state.isConnecting = false;
-          
-          // Setup peer listeners
-          this.setupPeerListeners();
-          
-          // Start discovery and heartbeat
-          this.startDiscovery();
-          this.startHeartbeat();
-          
-          // Add system message
-          this.addSystemMessage(`Vous avez rejoint le chat en tant que ${playerName}`);
-          
-          this.render();
-          resolve();
-        });
-        
-        this.peer!.on('error', (err) => {
-          clearTimeout(timeout);
-          console.error('Peer error:', err);
-          reject(err);
-        });
-      });
+      // Get the chat room node
+      this.chatRoom = this.gun.get(CHAT_ROOM_ID);
+      this.usersNode = this.chatRoom.get('users');
+      
+      // Subscribe to messages
+      this.subscribeToMessages();
+      
+      // Subscribe to user presence
+      this.subscribeToUsers();
+      
+      // Mark as connected
+      this.state.isConnected = true;
+      this.state.isConnecting = false;
+      
+      // Announce presence
+      this.announcePresence();
+      
+      // Start presence heartbeat
+      this.startPresenceHeartbeat();
+      
+      // Start cleanup of stale users
+      this.startUserCleanup();
+      
+      // Add system message
+      this.addSystemMessage(`Vous avez rejoint le chat en tant que ${playerName}`);
+      
+      // Send join message to others
+      this.sendJoinMessage();
+      
+      this.render();
       
     } catch (error) {
-      console.error('Failed to connect:', error);
+      console.error('Failed to connect to chat:', error);
       this.state.isConnecting = false;
       this.state.isConnected = false;
       this.render();
@@ -278,40 +284,36 @@ export class Chat {
    * Disconnect from the chat network
    */
   disconnect(): void {
-    // Notify peers
-    this.broadcastMessage({
-      id: this.generateMessageId(),
-      senderId: this.state.localPeerId,
-      senderName: this.state.localName,
-      content: '',
-      timestamp: Date.now(),
-      type: 'leave'
-    });
+    // Send leave message
+    if (this.state.isConnected) {
+      this.sendLeaveMessage();
+      
+      // Remove our presence
+      if (this.usersNode) {
+        this.usersNode.get(this.state.localUserId).put(null);
+      }
+    }
     
     // Stop intervals
-    if (this.discoveryInterval) {
-      clearInterval(this.discoveryInterval);
-      this.discoveryInterval = null;
+    if (this.presenceInterval) {
+      clearInterval(this.presenceInterval);
+      this.presenceInterval = null;
     }
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
-    
-    // Close all connections
-    this.state.peers.forEach(peer => {
-      peer.connection?.close();
-    });
-    this.state.peers.clear();
-    
-    // Destroy peer
-    if (this.peer) {
-      this.peer.destroy();
-      this.peer = null;
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
     
+    // Clear state
+    this.state.users.clear();
     this.state.isConnected = false;
-    this.state.localPeerId = '';
+    this.state.localUserId = '';
+    
+    // Note: Gun doesn't have a destroy method, it will be garbage collected
+    this.gun = null;
+    this.chatRoom = null;
+    this.usersNode = null;
+    
     this.render();
   }
   
@@ -323,18 +325,18 @@ export class Chat {
     
     const message: ChatMessage = {
       id: this.generateMessageId(),
-      senderId: this.state.localPeerId,
+      senderId: this.state.localUserId,
       senderName: this.state.localName,
       content: content.trim(),
       timestamp: Date.now(),
       type: 'message'
     };
     
-    // Add to local messages
+    // Add to local messages immediately
     this.addMessage(message);
     
-    // Broadcast to all peers
-    this.broadcastMessage(message);
+    // Send to Gun network
+    this.chatRoom.get('messages').get(message.id).put(JSON.stringify(message));
     
     // Clear input
     if (this.inputElement) {
@@ -390,175 +392,123 @@ export class Chat {
   }
   
   // ============================================
-  // Private Methods - Peer Management
+  // Private Methods - Gun.js Integration
   // ============================================
   
   /**
-   * Setup peer event listeners
+   * Subscribe to messages from Gun
    */
-  private setupPeerListeners(): void {
-    if (!this.peer) return;
+  private subscribeToMessages(): void {
+    if (!this.chatRoom) return;
     
-    // Handle incoming connections
-    this.peer.on('connection', (conn) => {
-      this.handleIncomingConnection(conn);
-    });
-    
-    // Handle disconnection
-    this.peer.on('disconnected', () => {
-      console.log('Disconnected from signaling server, attempting reconnect...');
-      this.peer?.reconnect();
-    });
-    
-    // Handle errors
-    this.peer.on('error', (err: Error & { type?: string }) => {
-      console.error('Peer error:', err);
-      if (err.type === 'peer-unavailable') {
-        // Peer not found, this is normal during discovery
+    this.chatRoom.get('messages').map().on((data: string | null, key: string) => {
+      if (!data || this.seenMessageIds.has(key)) return;
+      
+      try {
+        const message: ChatMessage = JSON.parse(data);
+        
+        // Skip our own messages (already added locally)
+        if (message.senderId === this.state.localUserId && message.type === 'message') {
+          this.seenMessageIds.add(key);
+          return;
+        }
+        
+        // Skip old messages (more than 1 hour old)
+        if (Date.now() - message.timestamp > 3600000) {
+          return;
+        }
+        
+        this.seenMessageIds.add(key);
+        this.handleIncomingMessage(message);
+      } catch (error) {
+        // Invalid message data, ignore
       }
     });
   }
   
   /**
-   * Handle incoming connection from another peer
+   * Subscribe to user presence
    */
-  private handleIncomingConnection(conn: DataConnection): void {
-    conn.on('open', () => {
-      // Send our info
-      conn.send(JSON.stringify({
-        type: 'hello',
-        peerId: this.state.localPeerId,
-        name: this.state.localName,
-        knownPeers: Array.from(this.state.peers.keys())
-      }));
-    });
+  private subscribeToUsers(): void {
+    if (!this.usersNode) return;
     
-    conn.on('data', (data) => {
-      this.handlePeerData(conn, data);
-    });
-    
-    conn.on('close', () => {
-      this.handlePeerDisconnect(conn.peer);
-    });
-    
-    conn.on('error', (err) => {
-      console.error('Connection error:', err);
-    });
-  }
-  
-  /**
-   * Connect to a peer
-   */
-  private connectToPeer(peerId: string): void {
-    if (!this.peer || peerId === this.state.localPeerId || this.state.peers.has(peerId)) {
-      return;
-    }
-    
-    if (this.state.peers.size >= MAX_PEERS) {
-      return;
-    }
-    
-    try {
-      const conn = this.peer.connect(peerId, { reliable: true });
-      
-      conn.on('open', () => {
-        // Send our info
-        conn.send(JSON.stringify({
-          type: 'hello',
-          peerId: this.state.localPeerId,
-          name: this.state.localName,
-          knownPeers: Array.from(this.state.peers.keys())
-        }));
-      });
-      
-      conn.on('data', (data) => {
-        this.handlePeerData(conn, data);
-      });
-      
-      conn.on('close', () => {
-        this.handlePeerDisconnect(peerId);
-      });
-      
-      conn.on('error', (err) => {
-        // Peer not available, remove from list
-        this.state.peers.delete(peerId);
-      });
-      
-    } catch (error) {
-      console.error('Failed to connect to peer:', error);
-    }
-  }
-  
-  /**
-   * Handle data from a peer
-   */
-  private handlePeerData(conn: DataConnection, data: unknown): void {
-    if (typeof data !== 'string') return;
-    
-    try {
-      const parsed = JSON.parse(data);
-      
-      switch (parsed.type) {
-        case 'hello':
-          this.handleHello(conn, parsed);
-          break;
-        case 'message':
-        case 'join':
-        case 'leave':
-        case 'system':
-          this.handleChatMessage(parsed);
-          break;
-        case 'heartbeat':
-          this.handleHeartbeat(conn.peer);
-          break;
-        case 'peers':
-          this.handlePeerList(parsed.peers);
-          break;
+    this.usersNode.map().on((data: string | null, oderId: string) => {
+      if (!data) {
+        // User left
+        this.state.users.delete(oderId);
+        this.updateStatus();
+        return;
       }
-    } catch (error) {
-      console.error('Failed to parse peer data:', error);
-    }
-  }
-  
-  /**
-   * Handle hello message from peer
-   */
-  private handleHello(conn: DataConnection, data: { peerId: string; name: string; knownPeers: string[] }): void {
-    const { peerId, name, knownPeers } = data;
-    
-    // Add peer to our list
-    if (!this.state.peers.has(peerId)) {
-      this.state.peers.set(peerId, {
-        id: peerId,
-        name: name,
-        connection: conn,
-        lastSeen: Date.now()
-      });
       
-      // Add join message
-      this.addSystemMessage(`${name} a rejoint le chat`);
-      
-      // Update UI
-      this.updateStatus();
-    } else {
-      // Update existing peer
-      const peer = this.state.peers.get(peerId)!;
-      peer.connection = conn;
-      peer.lastSeen = Date.now();
-    }
-    
-    // Try to connect to their known peers
-    knownPeers.forEach(pid => {
-      if (pid !== this.state.localPeerId && !this.state.peers.has(pid)) {
-        this.connectToPeer(pid);
+      try {
+        const user: ChatUser = JSON.parse(data);
+        
+        // Skip ourselves
+        if (user.id === this.state.localUserId) return;
+        
+        // Check if user is still active (within timeout)
+        if (Date.now() - user.lastSeen > USER_TIMEOUT) {
+          this.state.users.delete(user.id);
+        } else {
+          this.state.users.set(user.id, user);
+        }
+        
+        this.updateStatus();
+      } catch (error) {
+        // Invalid user data, ignore
       }
     });
   }
   
   /**
-   * Handle chat message
+   * Announce our presence
    */
-  private handleChatMessage(message: ChatMessage): void {
+  private announcePresence(): void {
+    if (!this.usersNode || !this.state.isConnected) return;
+    
+    const userData: ChatUser = {
+      id: this.state.localUserId,
+      name: this.state.localName,
+      lastSeen: Date.now()
+    };
+    
+    this.usersNode.get(this.state.localUserId).put(JSON.stringify(userData));
+  }
+  
+  /**
+   * Start presence heartbeat
+   */
+  private startPresenceHeartbeat(): void {
+    this.presenceInterval = setInterval(() => {
+      this.announcePresence();
+    }, PRESENCE_INTERVAL);
+  }
+  
+  /**
+   * Start cleanup of stale users
+   */
+  private startUserCleanup(): void {
+    this.cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      let changed = false;
+      
+      this.state.users.forEach((user, oderId) => {
+        if (now - user.lastSeen > USER_TIMEOUT) {
+          this.state.users.delete(oderId);
+          changed = true;
+        }
+      });
+      
+      if (changed) {
+        this.updateStatus();
+      }
+    }, 30000);
+  }
+  
+  /**
+   * Handle incoming message from Gun
+   */
+  private handleIncomingMessage(message: ChatMessage): void {
     // Check if we already have this message
     if (this.state.messages.some(m => m.id === message.id)) {
       return;
@@ -566,104 +516,38 @@ export class Chat {
     
     // Add message
     this.addMessage(message);
+  }
+  
+  /**
+   * Send join message
+   */
+  private sendJoinMessage(): void {
+    const message: ChatMessage = {
+      id: this.generateMessageId(),
+      senderId: this.state.localUserId,
+      senderName: this.state.localName,
+      content: `${this.state.localName} a rejoint le chat`,
+      timestamp: Date.now(),
+      type: 'join'
+    };
     
-    // Forward to other peers (mesh network)
-    this.broadcastMessage(message, message.senderId);
+    this.chatRoom.get('messages').get(message.id).put(JSON.stringify(message));
   }
   
   /**
-   * Handle heartbeat from peer
+   * Send leave message
    */
-  private handleHeartbeat(peerId: string): void {
-    const peer = this.state.peers.get(peerId);
-    if (peer) {
-      peer.lastSeen = Date.now();
-    }
-  }
-  
-  /**
-   * Handle peer list from another peer
-   */
-  private handlePeerList(peers: string[]): void {
-    peers.forEach(peerId => {
-      if (peerId !== this.state.localPeerId && !this.state.peers.has(peerId)) {
-        this.connectToPeer(peerId);
-      }
-    });
-  }
-  
-  /**
-   * Handle peer disconnect
-   */
-  private handlePeerDisconnect(peerId: string): void {
-    const peer = this.state.peers.get(peerId);
-    if (peer) {
-      this.addSystemMessage(`${peer.name} a quitté le chat`);
-      this.state.peers.delete(peerId);
-      this.updateStatus();
-    }
-  }
-  
-  // ============================================
-  // Private Methods - Discovery & Heartbeat
-  // ============================================
-  
-  /**
-   * Start peer discovery
-   */
-  private startDiscovery(): void {
-    // Try to connect to bootstrap peers
-    this.discoverPeers();
+  private sendLeaveMessage(): void {
+    const message: ChatMessage = {
+      id: this.generateMessageId(),
+      senderId: this.state.localUserId,
+      senderName: this.state.localName,
+      content: `${this.state.localName} a quitté le chat`,
+      timestamp: Date.now(),
+      type: 'leave'
+    };
     
-    // Periodically discover new peers
-    this.discoveryInterval = setInterval(() => {
-      this.discoverPeers();
-    }, PEER_DISCOVERY_INTERVAL);
-  }
-  
-  /**
-   * Discover peers by trying known peer IDs
-   */
-  private discoverPeers(): void {
-    // Generate potential peer IDs to try
-    for (let i = 0; i < BOOTSTRAP_PEER_COUNT; i++) {
-      const potentialPeerId = `${ROOM_PREFIX}${i}`;
-      if (potentialPeerId !== this.state.localPeerId) {
-        this.connectToPeer(potentialPeerId);
-      }
-    }
-    
-    // Also try to connect to peers known by our peers
-    this.state.peers.forEach(peer => {
-      if (peer.connection?.open) {
-        peer.connection.send(JSON.stringify({
-          type: 'peers',
-          peers: Array.from(this.state.peers.keys())
-        }));
-      }
-    });
-  }
-  
-  /**
-   * Start heartbeat
-   */
-  private startHeartbeat(): void {
-    this.heartbeatInterval = setInterval(() => {
-      // Send heartbeat to all peers
-      this.state.peers.forEach(peer => {
-        if (peer.connection?.open) {
-          peer.connection.send(JSON.stringify({ type: 'heartbeat' }));
-        }
-      });
-      
-      // Remove stale peers
-      const now = Date.now();
-      this.state.peers.forEach((peer, peerId) => {
-        if (now - peer.lastSeen > PEER_TIMEOUT) {
-          this.handlePeerDisconnect(peerId);
-        }
-      });
-    }, HEARTBEAT_INTERVAL);
+    this.chatRoom.get('messages').get(message.id).put(JSON.stringify(message));
   }
   
   // ============================================
@@ -671,23 +555,18 @@ export class Chat {
   // ============================================
   
   /**
-   * Broadcast a message to all peers
-   */
-  private broadcastMessage(message: ChatMessage, excludePeerId?: string): void {
-    const data = JSON.stringify(message);
-    
-    this.state.peers.forEach(peer => {
-      if (peer.id !== excludePeerId && peer.connection?.open) {
-        peer.connection.send(data);
-      }
-    });
-  }
-  
-  /**
    * Add a message to the list
    */
   private addMessage(message: ChatMessage): void {
+    // Check for duplicates
+    if (this.state.messages.some(m => m.id === message.id)) {
+      return;
+    }
+    
     this.state.messages.push(message);
+    
+    // Sort by timestamp
+    this.state.messages.sort((a, b) => a.timestamp - b.timestamp);
     
     // Limit messages
     if (this.state.messages.length > MAX_MESSAGES) {
@@ -702,7 +581,7 @@ export class Chat {
     this.scrollToBottom();
     
     // Increment unread count if chat is closed and message is not from us
-    if (!this.isOpen && message.senderId !== this.state.localPeerId && message.type === 'message') {
+    if (!this.isOpen && message.senderId !== this.state.localUserId && message.type === 'message') {
       this.unreadCount++;
       this.updateBadge();
     }
@@ -796,7 +675,7 @@ export class Chat {
    * Render a single message
    */
   private renderMessage(message: ChatMessage): string {
-    const isOwn = message.senderId === this.state.localPeerId;
+    const isOwn = message.senderId === this.state.localUserId;
     const time = new Date(message.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     
     if (message.type === 'system' || message.type === 'join' || message.type === 'leave') {
@@ -835,7 +714,7 @@ export class Chat {
     const statusEl = this.chatElement?.querySelector('.chat-status');
     if (statusEl) {
       statusEl.className = `chat-status ${this.state.isConnected ? 'connected' : 'disconnected'}`;
-      statusEl.textContent = this.state.isConnected ? `${this.state.peers.size + 1} en ligne` : 'Déconnecté';
+      statusEl.textContent = this.state.isConnected ? `${this.state.users.size + 1} en ligne` : 'Déconnecté';
     }
   }
   
@@ -853,19 +732,17 @@ export class Chat {
   // ============================================
   
   /**
-   * Generate a peer ID
+   * Generate a user ID
    */
-  private generatePeerId(): string {
-    // Try to get a bootstrap peer ID first
-    const bootstrapIndex = Math.floor(Math.random() * BOOTSTRAP_PEER_COUNT);
-    return `${ROOM_PREFIX}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  private generateUserId(): string {
+    return `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   
   /**
    * Generate a message ID
    */
   private generateMessageId(): string {
-    return `${this.state.localPeerId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
   
   /**
@@ -896,7 +773,12 @@ export class Chat {
     try {
       const saved = localStorage.getItem('chess-chat-messages');
       if (saved) {
-        this.state.messages = JSON.parse(saved);
+        const messages = JSON.parse(saved);
+        // Only load recent messages (less than 1 hour old)
+        const oneHourAgo = Date.now() - 3600000;
+        this.state.messages = messages.filter((m: ChatMessage) => m.timestamp > oneHourAgo);
+        // Add message IDs to seen set
+        this.state.messages.forEach((m: ChatMessage) => this.seenMessageIds.add(m.id));
       }
     } catch (error) {
       console.error('Failed to load messages:', error);
