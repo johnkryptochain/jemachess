@@ -1,0 +1,18 @@
+/* Copyright (c) 2025 Jema Technology.
+ * Distributed under the license specified in the root directory of this project.
+ */
+
+/* Chess Game - Glassmorphism UI Styles
+ * Modern design system
+ * Primary color: #7d82ea
+ */
+
+@import './variables.css';
+@import './base.css';
+@import './components.css';
+@import './layout.css';
+@import './board.css';
+@import './menu.css';
+@import './analysis.css';
+@import './landing.css';
+@import './chat.css';

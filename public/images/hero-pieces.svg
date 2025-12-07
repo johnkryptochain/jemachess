@@ -1,0 +1,158 @@
+<svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b8fe8"/>
+      <stop offset="100%" style="stop-color:#6b6fdb"/>
+    </linearGradient>
+    
+    <linearGradient id="lightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a5a8f0"/>
+      <stop offset="100%" style="stop-color:#8b8fe8"/>
+    </linearGradient>
+    
+    <linearGradient id="darkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5558b8"/>
+      <stop offset="100%" style="stop-color:#4446a0"/>
+    </linearGradient>
+    
+    <linearGradient id="boardLightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.15)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.08)"/>
+    </linearGradient>
+    
+    <linearGradient id="boardDarkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(107,111,219,0.3)"/>
+      <stop offset="100%" style="stop-color:rgba(107,111,219,0.15)"/>
+    </linearGradient>
+    
+    <!-- Filters -->
+    <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="15" stdDeviation="20" flood-color="rgba(0,0,0,0.4)"/>
+    </filter>
+    
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feFlood flood-color="#ffffff" flood-opacity="0.3"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feGaussianBlur stdDeviation="3"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background decorative elements -->
+  <circle cx="50" cy="450" r="8" fill="rgba(107,111,219,0.4)"/>
+  <circle cx="450" cy="80" r="12" fill="rgba(107,111,219,0.3)"/>
+  <circle cx="420" cy="420" r="10" fill="rgba(107,111,219,0.5)"/>
+  <circle cx="80" cy="120" r="6" fill="rgba(107,111,219,0.35)"/>
+  
+  <!-- Board squares hint at bottom -->
+  <g transform="translate(100, 380)">
+    <rect x="0" y="0" width="75" height="75" fill="url(#boardLightGradient)" rx="4"/>
+    <rect x="75" y="0" width="75" height="75" fill="url(#boardDarkGradient)" rx="4"/>
+    <rect x="150" y="0" width="75" height="75" fill="url(#boardLightGradient)" rx="4"/>
+    <rect x="225" y="0" width="75" height="75" fill="url(#boardDarkGradient)" rx="4"/>
+  </g>
+  
+  <!-- King (back left) - Semi-transparent -->
+  <g transform="translate(70, 100)" opacity="0.5" filter="url(#dropShadow)">
+    <!-- Base -->
+    <path d="M30 180 L90 180 L85 160 L35 160 Z" fill="url(#primaryGradient)"/>
+    <!-- Body -->
+    <path d="M35 160 L40 100 L80 100 L85 160 Z" fill="url(#primaryGradient)"/>
+    <!-- Collar -->
+    <ellipse cx="60" cy="100" rx="25" ry="8" fill="url(#lightGradient)"/>
+    <!-- Head -->
+    <circle cx="60" cy="70" r="25" fill="url(#primaryGradient)"/>
+    <!-- Cross -->
+    <rect x="56" y="30" width="8" height="25" fill="url(#lightGradient)"/>
+    <rect x="48" y="38" width="24" height="8" fill="url(#lightGradient)"/>
+    <!-- Highlight -->
+    <ellipse cx="52" cy="62" rx="8" ry="10" fill="rgba(255,255,255,0.15)"/>
+  </g>
+  
+  <!-- Knight (back right) - Semi-transparent -->
+  <g transform="translate(300, 90)" opacity="0.5" filter="url(#dropShadow)">
+    <!-- Base -->
+    <path d="M20 190 L100 190 L95 170 L25 170 Z" fill="url(#primaryGradient)"/>
+    <!-- Body -->
+    <path d="M25 170 L30 120 L90 120 L95 170 Z" fill="url(#primaryGradient)"/>
+    <!-- Neck and head -->
+    <path d="M40 120 C40 80 50 60 60 50 C70 40 85 45 90 55 C95 65 90 80 80 90 C90 95 95 105 95 120 Z" 
+          fill="url(#primaryGradient)"/>
+    <!-- Ear -->
+    <path d="M55 50 L50 30 L60 45 Z" fill="url(#lightGradient)"/>
+    <!-- Eye -->
+    <circle cx="75" cy="65" r="5" fill="rgba(255,255,255,0.3)"/>
+    <!-- Mane -->
+    <path d="M60 50 C55 60 50 80 45 100 L55 100 C55 85 58 70 65 55 Z" fill="url(#darkGradient)"/>
+    <!-- Highlight -->
+    <ellipse cx="70" cy="100" rx="12" ry="15" fill="rgba(255,255,255,0.1)"/>
+  </g>
+  
+  <!-- Pawn (front center) - Main piece with glow -->
+  <g transform="translate(175, 180)" filter="url(#glowFilter)">
+    <!-- Shadow on board -->
+    <ellipse cx="75" cy="260" rx="60" ry="15" fill="rgba(0,0,0,0.3)"/>
+    
+    <!-- Base -->
+    <path d="M20 250 L130 250 L120 220 L30 220 Z" fill="url(#primaryGradient)" filter="url(#innerGlow)"/>
+    
+    <!-- Lower body -->
+    <path d="M30 220 L40 160 L110 160 L120 220 Z" fill="url(#primaryGradient)"/>
+    
+    <!-- Middle section -->
+    <ellipse cx="75" cy="160" rx="45" ry="15" fill="url(#lightGradient)"/>
+    
+    <!-- Upper body -->
+    <path d="M45 160 L55 100 L95 100 L105 160 Z" fill="url(#primaryGradient)"/>
+    
+    <!-- Collar -->
+    <ellipse cx="75" cy="100" rx="30" ry="10" fill="url(#lightGradient)"/>
+    
+    <!-- Head -->
+    <circle cx="75" cy="60" r="35" fill="url(#primaryGradient)"/>
+    
+    <!-- Head highlight -->
+    <ellipse cx="62" cy="48" rx="15" ry="18" fill="rgba(255,255,255,0.2)"/>
+    
+    <!-- Top ornament -->
+    <circle cx="75" cy="20" r="10" fill="url(#lightGradient)"/>
+    
+    <!-- Decorative ring -->
+    <ellipse cx="75" cy="60" rx="35" ry="8" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+  </g>
+  
+  <!-- Decorative sparkles -->
+  <g fill="rgba(255,255,255,0.6)">
+    <circle cx="140" cy="200" r="2"/>
+    <circle cx="380" cy="150" r="2"/>
+    <circle cx="320" cy="350" r="2"/>
+    <circle cx="180" cy="380" r="2"/>
+  </g>
+  
+  <!-- Subtle connecting lines -->
+  <g stroke="rgba(107,111,219,0.2)" stroke-width="1" fill="none">
+    <path d="M100 350 Q 200 300 250 350"/>
+    <path d="M300 320 Q 350 280 400 350"/>
+  </g>
+</svg>

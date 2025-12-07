@@ -1,0 +1,74 @@
+/* Copyright (c) 2025 Jema Technology.
+ * Distributed under the license specified in the root directory of this project.
+ */
+
+:root {
+  /* Primary Colors */
+  --color-primary: #7d82ea;
+  --color-primary-light: #9a9ef0;
+  --color-primary-dark: #6366c0;
+  --color-primary-rgb: 125, 130, 234;
+  
+  /* Neutral Colors */
+  --color-background: #0a0a0f;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-elevated: rgba(255, 255, 255, 0.08);
+  --color-text-primary: rgba(255, 255, 255, 0.95);
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+  
+  /* Chess Board Colors */
+  --color-square-light: #F0D9B5;
+  --color-square-dark: #B58863;
+  --color-square-highlight: rgba(107, 111, 219, 0.5);
+  --color-square-selected: rgba(107, 111, 219, 0.7);
+  --color-square-legal-move: rgba(107, 111, 219, 0.4);
+  --color-square-last-move: rgba(255, 215, 0, 0.3);
+  --color-square-check: rgba(255, 59, 48, 0.5);
+  
+  /* Glassmorphism */
+  --glass-blur: 20px;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-background: rgba(255, 255, 255, 0.05);
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Typography */
+  --font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+  
+  /* Z-Index */
+  --z-board: 1;
+  --z-pieces: 10;
+  --z-overlay: 100;
+  --z-modal: 1000;
+  --z-toast: 2000;
+}

@@ -1,0 +1,26 @@
+{
+  "name": "chess-royale",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Peer-to-peer chess game with beautiful glassmorphism UI",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "peerjs": "^1.5.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.2",
+    "vite": "^7.2.6",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-core": "^7.0.0",
+    "workbox-expiration": "^7.0.0",
+    "workbox-precaching": "^7.0.0",
+    "workbox-routing": "^7.0.0",
+    "workbox-strategies": "^7.0.0"
+  }
+}
