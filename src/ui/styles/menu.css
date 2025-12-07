@@ -93,14 +93,53 @@
   text-align: center;
 }
 
+/* Lobby - Wrapper to center the lobby vertically */
+.app-container:has(.lobby-container) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Lobby */
 .lobby-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  max-width: 550px;
+  width: 100%;
+  margin: auto;
+}
+
+/* Lobby mode selection - compact layout */
+.lobby-container .mode-selection {
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
   max-width: 500px;
-  margin: 0 auto;
+}
+
+.lobby-container .mode-card {
+  padding: var(--spacing-lg);
+}
+
+.lobby-container .mode-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.lobby-container .mode-icon svg {
+  width: 56px;
+  height: 56px;
+}
+
+.lobby-container .mode-title {
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-xs);
+}
+
+.lobby-container .mode-description {
+  font-size: var(--font-size-sm);
 }
 
 .lobby-title {

@@ -18,6 +18,12 @@ import { store, AppState } from './store';
 import { ChessGame, ChessAI, AIDifficulty } from './engine';
 import { PeerConnection, RoomManager, GameSync } from './network';
 import {
+  MessageType,
+  HelloMessage,
+  createHelloMessage,
+  GameMessage
+} from './network/messages';
+import {
   MainMenu,
   Lobby,
   GameScreen,
@@ -1148,9 +1154,9 @@ export class App {
    * Show coach mode UI elements
    */
   private showCoachModeUI(): void {
-    // Add hint button to game screen
-    const gameControls = this.container.querySelector('.game-controls');
-    if (gameControls) {
+    // Add hint button to game actions (in the right panel)
+    const gameActions = this.container.querySelector('.game-actions');
+    if (gameActions) {
       const hintBtn = document.createElement('button');
       hintBtn.className = 'glass-button hint-btn';
       hintBtn.innerHTML = `
@@ -1159,11 +1165,128 @@ export class App {
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
           <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        Hint (H)
+        <span class="hint-text">Indice</span>
+        <span class="hint-key">(H)</span>
       `;
       hintBtn.addEventListener('click', () => this.showHint());
-      gameControls.appendChild(hintBtn);
+      gameActions.appendChild(hintBtn);
     }
+    
+    // Add floating hint button for mobile (always visible on touch devices)
+    this.addMobileHintButton();
+  }
+  
+  /**
+   * Add floating hint button for mobile devices
+   */
+  private addMobileHintButton(): void {
+    // Remove existing mobile hint button if any
+    const existingBtn = document.getElementById('mobile-hint-btn');
+    if (existingBtn) {
+      existingBtn.remove();
+    }
+    
+    const mobileHintBtn = document.createElement('button');
+    mobileHintBtn.id = 'mobile-hint-btn';
+    mobileHintBtn.className = 'mobile-hint-btn';
+    mobileHintBtn.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    `;
+    mobileHintBtn.title = 'Indice';
+    mobileHintBtn.addEventListener('click', () => this.showHint());
+    
+    // Add styles for mobile hint button
+    this.addMobileHintButtonStyles();
+    
+    document.body.appendChild(mobileHintBtn);
+  }
+  
+  /**
+   * Add styles for mobile hint button
+   */
+  private addMobileHintButtonStyles(): void {
+    const styleId = 'mobile-hint-btn-styles';
+    if (document.getElementById(styleId)) return;
+    
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .mobile-hint-btn {
+        display: none;
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7d82ea 0%, #5356a8 100%);
+        border: none;
+        color: white;
+        cursor: pointer;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(125, 130, 234, 0.4);
+        transition: all 0.2s;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .mobile-hint-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(125, 130, 234, 0.5);
+      }
+      
+      .mobile-hint-btn:active {
+        transform: scale(0.95);
+      }
+      
+      .mobile-hint-btn svg {
+        width: 28px;
+        height: 28px;
+      }
+      
+      /* Show on touch devices and small screens */
+      @media (max-width: 768px), (pointer: coarse) {
+        .mobile-hint-btn {
+          display: flex;
+        }
+      }
+      
+      /* Hide hint button text on small screens in game actions */
+      @media (max-width: 768px) {
+        .hint-btn .hint-text,
+        .hint-btn .hint-key {
+          display: none;
+        }
+        
+        .hint-btn {
+          padding: 8px 12px;
+        }
+      }
+      
+      /* Hint button in game actions */
+      .hint-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #7d82ea 0%, #5356a8 100%) !important;
+        color: white !important;
+      }
+      
+      .hint-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(125, 130, 234, 0.4);
+      }
+      
+      .hint-key {
+        opacity: 0.7;
+        font-size: 0.85em;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   /**
@@ -1516,11 +1639,6 @@ export class App {
       const status = game.gameStatus;
       const message = this.getGameOverMessage(status);
       Toast.info(message, 5000);
-      
-      // Show review option
-      setTimeout(() => {
-        Toast.info('Appuyez sur R pour revoir la partie', 3000);
-      }, 2000);
     }
   }
 
@@ -1634,6 +1752,12 @@ export class App {
     this.isCoachMode = false;
     store.disableAI();
     store.disableCoachMode();
+    
+    // Remove mobile hint button
+    const mobileHintBtn = document.getElementById('mobile-hint-btn');
+    if (mobileHintBtn) {
+      mobileHintBtn.remove();
+    }
     
     // Clean up move arrows
     if (this.moveArrows) {
@@ -1776,6 +1900,15 @@ export class App {
       Toast.success('Adversaire connecté !');
       store.setConnectionState({ opponentId: peerId });
       
+      // Send HELLO message with our name
+      const helloMessage = createHelloMessage(
+        this.peerConnection!.getPeerId(),
+        playerName,
+        '1.0.0'
+      );
+      this.peerConnection!.send(helloMessage);
+      console.log('Sent HELLO message with name:', playerName);
+      
       // If host, start the game when opponent connects
       if (isHost) {
         store.setPlayers(playerName, 'Adversaire');
@@ -1801,9 +1934,32 @@ export class App {
       store.setConnectionState({ latency });
     };
     
-    // Handle incoming messages for game sync
-    this.peerConnection.onMessage = (message) => {
+    // Handle incoming messages for game sync and HELLO
+    this.peerConnection.onMessage = (message: GameMessage) => {
       console.log('Received message:', message);
+      
+      // Handle HELLO message to get opponent's name
+      if (message.type === MessageType.HELLO) {
+        const helloMsg = message as HelloMessage;
+        console.log('Received HELLO from opponent:', helloMsg.playerName);
+        
+        // Update opponent name in store
+        const state = store.getState();
+        if (isHost) {
+          // Host received guest's name - update black player name
+          store.setPlayers(state.players.white, helloMsg.playerName);
+        } else {
+          // Guest received host's name - update white player name
+          store.setPlayers(helloMsg.playerName, state.players.black);
+        }
+        
+        // Update game chat with correct name
+        if (this.gameChat) {
+          this.gameChat.destroy();
+          this.initializeGameChat(isHost);
+        }
+      }
+      
       // GameSync will handle game-related messages
       if (this.gameSync) {
         // GameSync has its own message handler
