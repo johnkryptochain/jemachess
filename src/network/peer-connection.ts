@@ -466,23 +466,30 @@ export class PeerConnection {
   
   /**
    * Handle peer disconnection from signaling server
+   * This is called when the peer loses connection to the PeerJS signaling server,
+   * NOT when the data connection to the opponent closes.
    */
   private handlePeerDisconnected(): void {
+    // Only attempt to reconnect to signaling server if we're actually disconnected
+    // and reconnection is enabled
     if (this.shouldReconnect && this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-      this.attemptReconnect();
+      this.updateState({ status: ConnectionStatus.RECONNECTING });
+      this.attemptSignalingReconnect();
     }
   }
   
   /**
    * Handle data connection closed
+   * This is called when the WebRTC data connection to the opponent closes.
    */
   private handleConnectionClosed(): void {
     this.stopHeartbeat();
     this.connection = null;
     
+    // For data connection loss, we need different handling than signaling server disconnection
     if (this.shouldReconnect && this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       this.updateState({ status: ConnectionStatus.RECONNECTING });
-      this.attemptReconnect();
+      this.attemptDataReconnect();
     } else {
       this.updateState({
         status: ConnectionStatus.DISCONNECTED,
@@ -493,9 +500,55 @@ export class PeerConnection {
   }
   
   /**
-   * Attempt to reconnect with exponential backoff
+   * Attempt to reconnect to the signaling server with exponential backoff
+   * This is only for when we lose connection to the PeerJS server itself.
    */
-  private attemptReconnect(): void {
+  private attemptSignalingReconnect(): void {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+    
+    // Check if peer is actually disconnected from signaling server
+    if (this.peer && !this.peer.disconnected) {
+      console.log('Peer is still connected to signaling server, skipping reconnect');
+      this.reconnectAttempts = 0;
+      return;
+    }
+    
+    const delay = Math.min(
+      RECONNECT_BASE_DELAY * Math.pow(2, this.reconnectAttempts),
+      RECONNECT_MAX_DELAY
+    );
+    
+    this.reconnectAttempts++;
+    console.log(`Attempting signaling reconnect ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+    
+    this.reconnectTimeout = setTimeout(() => {
+      try {
+        // Only call reconnect() if peer is actually disconnected from signaling server
+        if (this.peer && this.peer.disconnected) {
+          this.peer.reconnect();
+        } else {
+          console.log('Peer not disconnected, skipping reconnect call');
+          this.reconnectAttempts = 0;
+        }
+      } catch (error) {
+        console.error('Signaling reconnect attempt failed:', error);
+        if (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          this.attemptSignalingReconnect();
+        } else {
+          this.updateState({ status: ConnectionStatus.DISCONNECTED });
+          this.onDisconnected?.('Max reconnection attempts reached');
+        }
+      }
+    }, delay);
+  }
+  
+  /**
+   * Attempt to reconnect the data connection with exponential backoff
+   * This is for when the WebRTC data connection to the opponent is lost.
+   */
+  private attemptDataReconnect(): void {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
     }
@@ -506,16 +559,23 @@ export class PeerConnection {
     );
     
     this.reconnectAttempts++;
-    console.log(`Attempting reconnect ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+    console.log(`Attempting data reconnect ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
     
     this.reconnectTimeout = setTimeout(() => {
       try {
         if (this.isHost) {
-          // Host just needs to reconnect to signaling server
-          this.peer?.reconnect();
+          // Host should NOT call peer.reconnect() - they wait for incoming connections
+          // The host's peer is still connected to signaling server, just the data connection was lost
+          // We just wait for the guest to reconnect to us
+          console.log('Host waiting for guest to reconnect...');
+          // Reset attempts since we're just waiting
+          this.reconnectAttempts = 0;
+          // Keep the reconnecting state but don't actively try to reconnect
+          // The guest will initiate a new connection
         } else {
-          // Guest needs to reconnect to host
-          if (this.peer && this.lastKnownPeerId) {
+          // Guest needs to create a new data connection to host
+          if (this.peer && this.lastKnownPeerId && !this.peer.disconnected) {
+            console.log('Guest attempting to reconnect to host:', this.lastKnownPeerId);
             this.connection = this.peer.connect(this.lastKnownPeerId, {
               reliable: true,
             });
@@ -529,18 +589,35 @@ export class PeerConnection {
               this.startHeartbeat();
               this.onConnected?.(this.lastKnownPeerId);
             });
+          } else if (this.peer?.disconnected) {
+            // If peer is disconnected from signaling server, reconnect to it first
+            console.log('Guest peer disconnected from signaling, reconnecting...');
+            this.attemptSignalingReconnect();
           }
         }
       } catch (error) {
-        console.error('Reconnect attempt failed:', error);
+        console.error('Data reconnect attempt failed:', error);
         if (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-          this.attemptReconnect();
+          this.attemptDataReconnect();
         } else {
           this.updateState({ status: ConnectionStatus.DISCONNECTED });
           this.onDisconnected?.('Max reconnection attempts reached');
         }
       }
     }, delay);
+  }
+  
+  /**
+   * Legacy method for backward compatibility
+   * @deprecated Use attemptDataReconnect or attemptSignalingReconnect instead
+   */
+  private attemptReconnect(): void {
+    // Determine which type of reconnection is needed
+    if (this.peer?.disconnected) {
+      this.attemptSignalingReconnect();
+    } else {
+      this.attemptDataReconnect();
+    }
   }
   
   /**

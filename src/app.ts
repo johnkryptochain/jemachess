@@ -1597,16 +1597,23 @@ export class App {
       return;
     }
     
-    // Create a partial move - the game.makeMove will fill in the details
-    const partialMove = {
-      from: move.from,
-      to: move.to,
-      piece: piece,
-      promotion: move.promotion,
-    };
+    // Get legal moves for this piece to find the matching move with correct moveType
+    const legalMoves = state.game.getLegalMoves(move.from);
+    const matchingMove = legalMoves.find(
+      (legalMove) =>
+        legalMove.to.file === move.to.file &&
+        legalMove.to.rank === move.to.rank &&
+        (!move.promotion || legalMove.promotion === move.promotion)
+    );
     
-    // Make the move on the game - it will determine moveType, isCheck, etc.
-    const success = state.game.makeMove(partialMove as Move);
+    if (!matchingMove) {
+      console.error('No matching legal move found for remote move:', move);
+      this.gameSync?.requestStateSync();
+      return;
+    }
+    
+    // Make the move on the game using the complete move object with correct moveType
+    const success = state.game.makeMove(matchingMove);
     if (!success) {
       console.error('Failed to apply remote move:', move);
       // Request state sync to recover
