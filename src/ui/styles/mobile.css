@@ -1,0 +1,451 @@
+/* Copyright (c) 2025 Jema Technology.
+ * Distributed under the license specified in the root directory of this project.
+ */
+
+/* ============================================
+   Mobile Responsive Styles
+   Supports: iPhone 4/5/SE, Samsung S8/Edge, Honor Magic V3, Oppo X8 Pro
+   Screen sizes: 4" to 8" (320px to 480px width)
+   ============================================ */
+
+/* Base mobile styles - all phones */
+@media (max-width: 768px) {
+  :root {
+    --spacing-xs: 2px;
+    --spacing-sm: 4px;
+    --spacing-md: 8px;
+    --spacing-lg: 12px;
+    --spacing-xl: 16px;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
+  .app-container {
+    padding: 4px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Game container - vertical layout on mobile */
+  .game-container {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    gap: 8px !important;
+    padding: 4px !important;
+    max-width: 100% !important;
+    align-items: center;
+  }
+
+  /* Side panels become horizontal bars */
+  .side-panel {
+    width: 100%;
+    flex-direction: row !important;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    order: 0;
+  }
+
+  .side-panel.left {
+    order: 1;
+  }
+
+  .side-panel.right {
+    order: 3;
+  }
+
+  .board-container {
+    order: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Player cards - compact horizontal */
+  .player-card {
+    min-width: auto !important;
+    max-width: none !important;
+    padding: 6px 10px !important;
+    flex: 1;
+    max-width: 180px;
+  }
+
+  .player-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+  }
+
+  .player-name {
+    font-size: 13px !important;
+  }
+
+  .player-rating {
+    font-size: 11px !important;
+  }
+
+  .player-timer {
+    font-size: 16px !important;
+  }
+
+  /* Chess board - responsive sizing */
+  .chess-board {
+    width: min(95vw, 95vmin) !important;
+    height: min(95vw, 95vmin) !important;
+    max-width: 480px;
+    max-height: 480px;
+  }
+
+  /* Move history - collapsible on mobile */
+  .move-history {
+    display: none;
+  }
+
+  /* Game actions - horizontal compact */
+  .game-actions {
+    width: 100%;
+    padding: 8px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .game-actions-row {
+    margin-bottom: 0 !important;
+  }
+
+  .icon-btn {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .icon-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .glass-button.small {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .glass-button.danger {
+    padding: 8px 16px !important;
+    font-size: 12px !important;
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    bottom: 10px !important;
+    right: 10px !important;
+    left: 10px !important;
+    max-width: none;
+  }
+
+  .toast {
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+  }
+
+  /* Chat widget */
+  .chat-overlay {
+    bottom: 10px !important;
+    right: 10px !important;
+  }
+
+  .chat-toggle-btn {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .chat-container {
+    width: calc(100vw - 20px) !important;
+    max-width: 360px !important;
+    height: 50vh !important;
+    max-height: 400px !important;
+  }
+}
+
+/* Small phones - iPhone 4/5/SE, older Android (320px - 375px) */
+@media (max-width: 375px) {
+  .app-container {
+    padding: 2px;
+  }
+
+  .game-container {
+    gap: 4px !important;
+    padding: 2px !important;
+  }
+
+  .player-card {
+    padding: 4px 8px !important;
+  }
+
+  .player-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+  }
+
+  .player-name {
+    font-size: 12px !important;
+  }
+
+  .player-timer {
+    font-size: 14px !important;
+  }
+
+  .chess-board {
+    width: min(98vw, 98vmin) !important;
+    height: min(98vw, 98vmin) !important;
+  }
+
+  .icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .icon-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .glass-button.danger {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* Coordinates smaller */
+  .coordinate {
+    font-size: 8px !important;
+  }
+}
+
+/* Very small phones - iPhone 4 (320px) */
+@media (max-width: 320px) {
+  .player-card {
+    padding: 3px 6px !important;
+  }
+
+  .player-avatar {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 10px !important;
+  }
+
+  .player-name {
+    font-size: 11px !important;
+    max-width: 60px;
+  }
+
+  .player-timer {
+    font-size: 12px !important;
+  }
+
+  .icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .icon-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .glass-button.danger {
+    padding: 5px 10px !important;
+    font-size: 10px !important;
+  }
+}
+
+/* Medium phones - iPhone 6/7/8, Samsung S8 (375px - 414px) */
+@media (min-width: 376px) and (max-width: 414px) {
+  .chess-board {
+    width: min(94vw, 94vmin) !important;
+    height: min(94vw, 94vmin) !important;
+  }
+
+  .player-card {
+    padding: 6px 10px !important;
+  }
+}
+
+/* Large phones - iPhone Plus/Max, Samsung Edge (414px - 480px) */
+@media (min-width: 415px) and (max-width: 480px) {
+  .chess-board {
+    width: min(92vw, 92vmin) !important;
+    height: min(92vw, 92vmin) !important;
+  }
+
+  .player-card {
+    padding: 8px 12px !important;
+  }
+
+  .player-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .player-timer {
+    font-size: 18px !important;
+  }
+}
+
+/* Foldable phones - Honor Magic V3, Samsung Fold (480px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .game-container {
+    gap: 12px !important;
+  }
+
+  .chess-board {
+    width: min(85vw, 85vmin) !important;
+    height: min(85vw, 85vmin) !important;
+    max-width: 520px;
+    max-height: 520px;
+  }
+
+  .player-card {
+    padding: 10px 14px !important;
+    max-width: 220px;
+  }
+
+  .player-avatar {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .player-timer {
+    font-size: 20px !important;
+  }
+
+  .icon-btn {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+/* Landscape mode on phones */
+@media (max-width: 896px) and (orientation: landscape) {
+  .game-container {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .side-panel {
+    flex-direction: column !important;
+    width: auto;
+    max-width: 150px;
+  }
+
+  .side-panel.left {
+    order: 1;
+  }
+
+  .board-container {
+    order: 2;
+  }
+
+  .side-panel.right {
+    order: 3;
+  }
+
+  .chess-board {
+    width: min(70vh, 70vmin) !important;
+    height: min(70vh, 70vmin) !important;
+  }
+
+  .player-card {
+    flex-direction: column !important;
+    text-align: center;
+    padding: 8px !important;
+  }
+
+  .player-timer {
+    text-align: center !important;
+  }
+
+  .game-actions {
+    flex-direction: column !important;
+    width: auto;
+    padding: 4px !important;
+  }
+
+  .game-actions-row {
+    flex-direction: column;
+  }
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: env(safe-area-inset-top)) {
+  .app-container {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .toast-container {
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    right: calc(10px + env(safe-area-inset-right)) !important;
+    left: calc(10px + env(safe-area-inset-left)) !important;
+  }
+
+  .chat-overlay {
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    right: calc(10px + env(safe-area-inset-right)) !important;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .piece {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .square {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .piece {
+    cursor: default;
+  }
+
+  .glass-button:active,
+  .icon-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Larger touch targets */
+  .icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Dark mode adjustments for OLED screens */
+@media (prefers-color-scheme: dark) {
+  .chess-board {
+    box-shadow: none;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .piece,
+  .square,
+  .glass-button,
+  .icon-btn {
+    transition: none !important;
+    animation: none !important;
+  }
+}

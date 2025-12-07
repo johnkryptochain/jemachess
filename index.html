@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#6b6fdb" />
-    <meta name="description" content="Peer-to-peer chess game with beautiful glassmorphism UI" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#7d82ea" />
+    <meta name="description" content="Jeu d'échecs moderne avec IA et multijoueur" />
     
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -12,28 +12,22 @@
     <meta name="apple-mobile-web-app-title" content="JemaChess" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="JemaChess" />
-    <meta name="msapplication-TileColor" content="#6b6fdb" />
-    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    <meta name="msapplication-TileColor" content="#7d82ea" />
+    <meta name="msapplication-TileImage" content="/icons/icon-192x192.svg" />
     <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="HandheldFriendly" content="true" />
     
     <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/icons/icon-512x512.svg" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96x96.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
-    
-    <!-- Splash screens for iOS -->
-    <link rel="apple-touch-startup-image" href="/icons/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
-    <link rel="apple-touch-startup-image" href="/icons/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-    <link rel="apple-touch-startup-image" href="/icons/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="/icons/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="/icons/splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="icon" type="image/svg+xml" sizes="192x192" href="/icons/icon-192x192.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.svg" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.svg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192x192.svg" />
     
     <title>JemaChess</title>
     
@@ -41,10 +35,10 @@
       /* CSS Variables - Color Scheme */
       :root {
         /* Primary Colors */
-        --color-primary: #6b6fdb;
-        --color-primary-light: #8b8fe8;
-        --color-primary-dark: #4b4fbb;
-        --color-primary-rgb: 107, 111, 219;
+        --color-primary: #7d82ea;
+        --color-primary-light: #9a9ef0;
+        --color-primary-dark: #6366c0;
+        --color-primary-rgb: 125, 130, 234;
         
         /* Glass Effect */
         --glass-background: rgba(255, 255, 255, 0.1);
@@ -106,12 +100,16 @@
       }
       
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        font-family: 'Inter', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         background: var(--background-gradient);
         color: var(--text-primary);
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
       
       /* App Container */
