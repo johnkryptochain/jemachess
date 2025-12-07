@@ -1,15 +1,19 @@
 /**
  * Chess Royale - Main Entry Point
- * 
+ *
  * A peer-to-peer chess game with glassmorphism UI,
  * featuring multiple piece themes and WebRTC networking.
  */
 
 import { App } from './app';
+import { initViewportDetector } from './utils/ViewportDetector';
 import './ui/styles/index.css';
 
 // Application instance
 let app: App | null = null;
+
+// Viewport detector instance
+const viewportDetector = initViewportDetector();
 
 /**
  * Initialize the application when DOM is ready
@@ -24,6 +28,16 @@ async function initializeApp(): Promise<void> {
   }
   
   try {
+    // Initialize viewport detection first
+    viewportDetector.detectAndApply();
+    
+    // Subscribe to viewport changes for logging
+    viewportDetector.subscribe((info) => {
+      console.log('Viewport:', info.mode, `${info.width}x${info.height}`,
+        `ratio: ${info.aspectRatio.toFixed(2)}`,
+        info.isFoldable ? '(foldable)' : '');
+    });
+    
     // Create and initialize the app
     app = new App(container);
     await app.init();

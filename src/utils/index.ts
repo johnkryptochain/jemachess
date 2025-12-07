@@ -40,3 +40,11 @@ export {
   onConnectivityChange,
   type BeforeInstallPromptEvent
 } from './pwa';
+
+// Viewport detection utilities
+export {
+  getViewportDetector,
+  initViewportDetector,
+  type DeviceMode,
+  type ViewportInfo
+} from './ViewportDetector';

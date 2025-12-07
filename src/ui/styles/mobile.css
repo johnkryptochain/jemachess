@@ -1096,3 +1096,358 @@
     animation: none !important;
   }
 }
+
+/* ============================================
+   JAVASCRIPT-BASED VIEWPORT CLASSES
+   These classes are applied by ViewportDetector.ts
+   and provide fallback when CSS media queries fail
+   ============================================ */
+
+/* Small phones (iPhone SE, etc.) */
+.viewport-phone-small .game-container {
+  gap: 2px !important;
+  padding: 2px !important;
+}
+
+.viewport-phone-small .chess-board {
+  width: var(--optimal-board-size, 300px) !important;
+  height: var(--optimal-board-size, 300px) !important;
+  max-width: 310px !important;
+  max-height: 310px !important;
+}
+
+.viewport-phone-small .player-card {
+  padding: 3px 6px !important;
+}
+
+.viewport-phone-small .player-avatar {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.viewport-phone-small .icon-btn {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+/* Medium phones */
+.viewport-phone-medium .game-container {
+  gap: 4px !important;
+  padding: 4px !important;
+}
+
+.viewport-phone-medium .chess-board {
+  width: var(--optimal-board-size, 340px) !important;
+  height: var(--optimal-board-size, 340px) !important;
+  max-width: 360px !important;
+  max-height: 360px !important;
+}
+
+/* Large phones */
+.viewport-phone-large .game-container {
+  gap: 6px !important;
+  padding: 6px !important;
+}
+
+.viewport-phone-large .chess-board {
+  width: var(--optimal-board-size, 380px) !important;
+  height: var(--optimal-board-size, 380px) !important;
+  max-width: 400px !important;
+  max-height: 400px !important;
+}
+
+/* ============================================
+   FOLDABLE PHONES - JAVASCRIPT CLASSES
+   ============================================ */
+
+/* Foldable in folded mode */
+.viewport-foldable-folded .app-container {
+  padding: 4px !important;
+  overflow: hidden !important;
+}
+
+.viewport-foldable-folded .game-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+}
+
+.viewport-foldable-folded .chess-board {
+  width: var(--optimal-board-size, 320px) !important;
+  height: var(--optimal-board-size, 320px) !important;
+  max-width: 340px !important;
+  max-height: 340px !important;
+  flex-shrink: 0 !important;
+}
+
+.viewport-foldable-folded .board-container {
+  order: 2 !important;
+  flex-shrink: 0 !important;
+}
+
+.viewport-foldable-folded .side-panel {
+  width: 100% !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+  padding: 4px 0 !important;
+}
+
+.viewport-foldable-folded .side-panel.left {
+  order: 1 !important;
+}
+
+.viewport-foldable-folded .side-panel.right {
+  order: 3 !important;
+  flex-wrap: wrap !important;
+}
+
+.viewport-foldable-folded .player-card {
+  padding: 6px 10px !important;
+  max-width: 150px !important;
+  flex: 0 1 auto !important;
+}
+
+.viewport-foldable-folded .player-avatar {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.viewport-foldable-folded .player-name {
+  font-size: 11px !important;
+}
+
+.viewport-foldable-folded .player-timer {
+  font-size: 14px !important;
+}
+
+/* CRITICAL: Force game actions to be visible in folded mode */
+.viewport-foldable-folded .game-actions {
+  order: 4 !important;
+  width: 100% !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 100 !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.viewport-foldable-folded .game-actions-row {
+  display: flex !important;
+  gap: 6px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.viewport-foldable-folded .icon-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.viewport-foldable-folded .glass-button.danger {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+}
+
+.viewport-foldable-folded .board-coordinates {
+  display: none !important;
+}
+
+.viewport-foldable-folded .move-history {
+  display: none !important;
+}
+
+/* Foldable in unfolded mode */
+.viewport-foldable-unfolded .app-container {
+  padding: 8px !important;
+  overflow: hidden !important;
+}
+
+.viewport-foldable-unfolded .game-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding: 8px !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+}
+
+.viewport-foldable-unfolded .chess-board {
+  width: var(--optimal-board-size, 520px) !important;
+  height: var(--optimal-board-size, 520px) !important;
+  max-width: 580px !important;
+  max-height: 580px !important;
+  flex-shrink: 0 !important;
+}
+
+.viewport-foldable-unfolded .board-container {
+  order: 2 !important;
+  flex-shrink: 0 !important;
+}
+
+.viewport-foldable-unfolded .side-panel {
+  flex-direction: row !important;
+  justify-content: center !important;
+  width: 100% !important;
+  gap: 24px !important;
+  flex-shrink: 0 !important;
+  padding: 8px 0 !important;
+}
+
+.viewport-foldable-unfolded .side-panel.left {
+  order: 1 !important;
+}
+
+.viewport-foldable-unfolded .side-panel.right {
+  order: 3 !important;
+}
+
+.viewport-foldable-unfolded .player-card {
+  width: auto !important;
+  max-width: 240px !important;
+  padding: 10px 18px !important;
+}
+
+.viewport-foldable-unfolded .player-avatar {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.viewport-foldable-unfolded .player-name {
+  font-size: 14px !important;
+}
+
+.viewport-foldable-unfolded .player-timer {
+  font-size: 20px !important;
+}
+
+.viewport-foldable-unfolded .game-actions {
+  order: 4 !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: auto !important;
+  padding: 10px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  visibility: visible !important;
+}
+
+.viewport-foldable-unfolded .game-actions-row {
+  display: flex !important;
+  gap: 12px !important;
+}
+
+.viewport-foldable-unfolded .icon-btn {
+  width: 44px !important;
+  height: 44px !important;
+  display: flex !important;
+}
+
+.viewport-foldable-unfolded .move-history {
+  display: none !important;
+}
+
+.viewport-foldable-unfolded .board-coordinates {
+  display: none !important;
+}
+
+/* Tablet mode */
+.viewport-tablet .game-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  padding: 16px !important;
+  align-items: center !important;
+}
+
+.viewport-tablet .chess-board {
+  width: var(--optimal-board-size, 500px) !important;
+  height: var(--optimal-board-size, 500px) !important;
+  max-width: 550px !important;
+  max-height: 550px !important;
+}
+
+.viewport-tablet .side-panel {
+  flex-direction: row !important;
+  width: 100% !important;
+  justify-content: center !important;
+  gap: 20px !important;
+}
+
+/* Desktop mode */
+.viewport-desktop .game-container {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  gap: 24px !important;
+  padding: 24px !important;
+  align-items: start !important;
+}
+
+.viewport-desktop .chess-board {
+  width: var(--optimal-board-size, 560px) !important;
+  height: var(--optimal-board-size, 560px) !important;
+}
+
+.viewport-desktop .side-panel {
+  flex-direction: column !important;
+  width: auto !important;
+}
+
+/* ============================================
+   PIECE DUPLICATION FIX - GLOBAL
+   ============================================ */
+
+/* Ensure only one piece per square - multiple selectors for maximum specificity */
+.square > .piece:not(:first-of-type),
+.square > img.piece:nth-of-type(n+2),
+.square .piece ~ .piece,
+.viewport-foldable .square .piece:not(:first-of-type),
+.viewport-foldable-folded .square .piece:not(:first-of-type),
+.viewport-foldable-unfolded .square .piece:not(:first-of-type) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Ensure pieces don't overflow */
+.square .piece {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}

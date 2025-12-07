@@ -37,6 +37,8 @@ export class Board {
   // Update batching to prevent multiple rapid updates
   private pendingUpdate: boolean = false;
   private isRendering: boolean = false;
+  private renderCount: number = 0;
+  private lastRenderTime: number = 0;
   
   // Event callbacks
   public onMove: ((move: Move) => void) | null = null;
@@ -90,28 +92,50 @@ export class Board {
 
   /**
    * Renders all squares on the board
+   * Uses aggressive duplicate prevention
    */
   private renderSquares(): void {
     if (!this.boardElement) return;
     
-    // Prevent concurrent renders
-    if (this.isRendering) return;
+    // Prevent concurrent renders with time-based throttling
+    const now = Date.now();
+    if (this.isRendering || (now - this.lastRenderTime < 16)) {
+      return;
+    }
+    
     this.isRendering = true;
+    this.lastRenderTime = now;
+    this.renderCount++;
     
     try {
-      // Clear all existing content to prevent duplicates
-      // Use innerHTML = '' for faster clearing
-      this.boardElement.innerHTML = '';
+      // AGGRESSIVE CLEANUP: Remove ALL children first
+      while (this.boardElement.firstChild) {
+        this.boardElement.removeChild(this.boardElement.firstChild);
+      }
       
-      const board = this.game.getBoard();
+      // Double-check with innerHTML as backup
+      this.boardElement.innerHTML = '';
       
       // Create a document fragment for better performance
       const fragment = document.createDocumentFragment();
+      
+      // Track which squares we've created to prevent duplicates
+      const createdSquares = new Set<string>();
       
       for (let rank = 7; rank >= 0; rank--) {
         for (let file = 0; file < 8; file++) {
           const displayRank = this.flipped ? 7 - rank : rank;
           const displayFile = this.flipped ? 7 - file : file;
+          
+          // Create unique key for this square
+          const squareKey = `${displayFile}-${displayRank}`;
+          
+          // Skip if already created (shouldn't happen, but safety check)
+          if (createdSquares.has(squareKey)) {
+            console.warn(`Duplicate square detected: ${squareKey}`);
+            continue;
+          }
+          createdSquares.add(squareKey);
           
           const square = this.createSquare(displayFile, displayRank);
           fragment.appendChild(square);
@@ -120,9 +144,32 @@ export class Board {
       
       // Append all squares at once
       this.boardElement.appendChild(fragment);
+      
+      // Post-render cleanup: remove any duplicate pieces that might have appeared
+      this.cleanupDuplicatePieces();
+      
     } finally {
       this.isRendering = false;
     }
+  }
+  
+  /**
+   * Cleanup any duplicate pieces that might have appeared
+   */
+  private cleanupDuplicatePieces(): void {
+    if (!this.boardElement) return;
+    
+    const squares = this.boardElement.querySelectorAll('.square');
+    squares.forEach(square => {
+      const pieces = square.querySelectorAll('.piece');
+      if (pieces.length > 1) {
+        console.warn(`Found ${pieces.length} pieces in square, removing duplicates`);
+        // Keep only the first piece, remove all others
+        for (let i = 1; i < pieces.length; i++) {
+          pieces[i].remove();
+        }
+      }
+    });
   }
 
   /**
@@ -160,15 +207,24 @@ export class Board {
     const piece = this.game.getPieceAt(position);
     
     if (piece) {
-      // Ensure no duplicate pieces - check if square already has a piece
-      const existingPiece = square.querySelector('.piece');
-      if (!existingPiece) {
-        const pieceElement = PieceRenderer.createElement(piece, this.pieceTheme);
-        pieceElement.dataset.file = file.toString();
-        pieceElement.dataset.rank = rank.toString();
-        square.appendChild(pieceElement);
-        square.classList.add('has-piece');
-      }
+      // AGGRESSIVE duplicate prevention
+      // First, remove any existing pieces
+      const existingPieces = square.querySelectorAll('.piece');
+      existingPieces.forEach(p => p.remove());
+      
+      // Now add the piece
+      const pieceElement = PieceRenderer.createElement(piece, this.pieceTheme);
+      pieceElement.dataset.file = file.toString();
+      pieceElement.dataset.rank = rank.toString();
+      
+      // Ensure piece has unique identifier
+      pieceElement.dataset.pieceId = `${piece.color}-${piece.type}-${file}-${rank}`;
+      
+      square.appendChild(pieceElement);
+      square.classList.add('has-piece');
+    } else {
+      // No piece - ensure square is clean
+      square.classList.remove('has-piece');
     }
     
     // Highlight selected square
@@ -807,14 +863,35 @@ export class Board {
   /**
    * Updates the board display
    * Uses requestAnimationFrame to batch multiple rapid updates
+   * With additional safeguards against duplicate renders
    */
   update(): void {
-    if (this.pendingUpdate) return;
+    // Cancel any pending update
+    if (this.pendingUpdate) {
+      return;
+    }
+    
     this.pendingUpdate = true;
+    
+    // Use double RAF for more reliable batching
     requestAnimationFrame(() => {
-      this.renderSquares();
-      this.pendingUpdate = false;
+      requestAnimationFrame(() => {
+        if (!this.pendingUpdate) return;
+        
+        this.renderSquares();
+        this.pendingUpdate = false;
+      });
     });
+  }
+  
+  /**
+   * Force immediate update (use sparingly)
+   */
+  forceUpdate(): void {
+    this.pendingUpdate = false;
+    this.isRendering = false;
+    this.lastRenderTime = 0;
+    this.renderSquares();
   }
 
   /**
