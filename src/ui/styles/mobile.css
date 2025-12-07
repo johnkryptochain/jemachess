@@ -1425,6 +1425,217 @@
 }
 
 /* ============================================
+   DESKTOP & LAPTOP OVERRIDE (> 1200px)
+   Force 3-column grid layout on large screens
+   ============================================ */
+@media (min-width: 1201px) {
+  .game-container {
+    display: grid !important;
+    grid-template-columns: minmax(200px, 280px) minmax(400px, 600px) minmax(200px, 280px) !important;
+    grid-template-rows: 1fr !important;
+    flex-direction: unset !important;
+    gap: 20px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 16px !important;
+    align-items: start !important;
+    justify-content: center !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .side-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  .side-panel.left {
+    order: 1 !important;
+    align-items: flex-end !important;
+    grid-column: 1 !important;
+  }
+  
+  .board-container {
+    order: 2 !important;
+    grid-column: 2 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+  }
+  
+  .side-panel.right {
+    order: 3 !important;
+    align-items: flex-start !important;
+    grid-column: 3 !important;
+  }
+  
+  .chess-board {
+    width: min(60vh, 560px) !important;
+    height: min(60vh, 560px) !important;
+    max-width: 560px !important;
+    max-height: 560px !important;
+  }
+  
+  .player-card {
+    min-width: 180px !important;
+    max-width: 260px !important;
+    width: 100% !important;
+    flex-direction: row !important;
+  }
+  
+  .player-avatar {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .player-name {
+    font-size: 14px !important;
+  }
+  
+  .player-timer {
+    font-size: 20px !important;
+  }
+  
+  .move-history {
+    display: block !important;
+    max-height: 250px !important;
+    width: 100% !important;
+  }
+  
+  .game-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    padding: 16px !important;
+    order: unset !important;
+  }
+  
+  .game-actions-row {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 10px !important;
+  }
+  
+  .icon-btn {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  
+  .icon-btn svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  .glass-button.danger {
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+  }
+  
+  .board-coordinates {
+    display: block !important;
+  }
+}
+
+/* Smaller laptops (1201px - 1400px) */
+@media (min-width: 1201px) and (max-width: 1400px) {
+  .game-container {
+    grid-template-columns: minmax(180px, 220px) minmax(380px, 500px) minmax(180px, 220px) !important;
+    gap: 16px !important;
+    padding: 12px !important;
+  }
+  
+  .chess-board {
+    width: min(55vh, 480px) !important;
+    height: min(55vh, 480px) !important;
+    max-width: 480px !important;
+    max-height: 480px !important;
+  }
+  
+  .player-card {
+    min-width: 160px !important;
+    max-width: 200px !important;
+  }
+  
+  .player-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  .player-timer {
+    font-size: 18px !important;
+  }
+  
+  .move-history {
+    max-height: 200px !important;
+  }
+  
+  .game-actions {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  
+  .icon-btn {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* Very large screens (> 1600px) */
+@media (min-width: 1601px) {
+  .game-container {
+    grid-template-columns: minmax(250px, 320px) minmax(500px, 700px) minmax(250px, 320px) !important;
+    gap: 32px !important;
+    max-width: 1600px !important;
+    padding: 24px !important;
+  }
+  
+  .chess-board {
+    width: min(65vh, 650px) !important;
+    height: min(65vh, 650px) !important;
+    max-width: 650px !important;
+    max-height: 650px !important;
+  }
+  
+  .player-card {
+    min-width: 220px !important;
+    max-width: 300px !important;
+    padding: 14px 20px !important;
+  }
+  
+  .player-avatar {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  .player-name {
+    font-size: 16px !important;
+  }
+  
+  .player-timer {
+    font-size: 24px !important;
+  }
+  
+  .move-history {
+    max-height: 350px !important;
+  }
+  
+  .icon-btn {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .icon-btn svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* ============================================
    PIECE DUPLICATION FIX - GLOBAL
    ============================================ */
 
