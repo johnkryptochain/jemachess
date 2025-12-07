@@ -26,6 +26,8 @@
     padding: 4px;
     min-height: 100vh;
     min-height: 100dvh;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   /* Game container - vertical layout on mobile */
@@ -33,10 +35,14 @@
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: none !important;
-    gap: 8px !important;
+    gap: 6px !important;
     padding: 4px !important;
     max-width: 100% !important;
     align-items: center;
+    min-height: calc(100vh - 8px);
+    min-height: calc(100dvh - 8px);
+    justify-content: space-between;
+    box-sizing: border-box;
   }
 
   /* Side panels become horizontal bars */
@@ -47,6 +53,7 @@
     align-items: center;
     gap: 8px;
     order: 0;
+    flex-shrink: 0;
   }
 
   .side-panel.left {
@@ -62,6 +69,7 @@
     width: 100%;
     display: flex;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   /* Player cards - compact horizontal */
@@ -91,12 +99,12 @@
     font-size: 16px !important;
   }
 
-  /* Chess board - responsive sizing */
+  /* Chess board - responsive sizing - leave room for buttons */
   .chess-board {
-    width: min(95vw, 95vmin) !important;
-    height: min(95vw, 95vmin) !important;
-    max-width: 480px;
-    max-height: 480px;
+    width: min(85vw, calc(100vh - 280px), 400px) !important;
+    height: min(85vw, calc(100vh - 280px), 400px) !important;
+    max-width: 400px;
+    max-height: 400px;
   }
 
   /* Move history - collapsible on mobile */
@@ -112,6 +120,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .game-actions-row {
@@ -138,9 +147,9 @@
     font-size: 12px !important;
   }
 
-  /* Toast notifications */
+  /* Toast notifications - above bottom buttons */
   .toast-container {
-    bottom: 10px !important;
+    bottom: 80px !important;
     right: 10px !important;
     left: 10px !important;
     max-width: none;
@@ -167,6 +176,56 @@
     max-width: 360px !important;
     height: 50vh !important;
     max-height: 400px !important;
+  }
+}
+
+/* iPhone X, XS, 11, 12, 13, 14, 15 (notched phones with tall screens) */
+@media (max-width: 430px) and (min-height: 700px) {
+  .game-container {
+    gap: 4px !important;
+    padding: 4px !important;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 20px)) !important;
+  }
+
+  /* Smaller board to fit everything */
+  .chess-board {
+    width: min(90vw, calc(100dvh - 320px), 380px) !important;
+    height: min(90vw, calc(100dvh - 320px), 380px) !important;
+    max-width: 380px !important;
+    max-height: 380px !important;
+  }
+
+  .player-card {
+    padding: 5px 8px !important;
+  }
+
+  .player-avatar {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .player-timer {
+    font-size: 14px !important;
+  }
+
+  .game-actions {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+
+  .icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .glass-button.danger {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* Toast above buttons */
+  .toast-container {
+    bottom: calc(70px + env(safe-area-inset-bottom, 20px)) !important;
   }
 }
 

@@ -140,11 +140,19 @@
 }
 
 .room-code-input {
-  font-size: var(--font-size-xl);
-  text-align: center;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  width: 200px;
+  font-size: var(--font-size-md) !important;
+  text-align: left !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  width: 100% !important;
+  max-width: 400px;
+  font-family: monospace;
+  padding: var(--spacing-md) !important;
+}
+
+.room-code-input::placeholder {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .join-form {

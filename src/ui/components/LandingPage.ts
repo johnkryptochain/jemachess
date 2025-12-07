@@ -631,7 +631,7 @@ export class LandingPage {
     const footerCredits = document.createElement('div');
     footerCredits.className = 'sidebar-footer';
     footerCredits.innerHTML = `
-      <p class="footer-text">Développé par <strong>Jema Technology</strong></p>
+      <p class="footer-text">Développé par <a href="https://www.jematechnology.fr/" target="_blank" rel="noopener noreferrer" class="jema-link">Jema Technology</a></p>
       <p class="footer-year">© 2025 • Open Source & Libre</p>
     `;
     bottomSection.appendChild(footerCredits);

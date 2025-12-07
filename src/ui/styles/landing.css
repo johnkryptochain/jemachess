@@ -409,6 +409,18 @@
   font-weight: 600;
 }
 
+.sidebar-footer .jema-link {
+  color: #7d82ea;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sidebar-footer .jema-link:hover {
+  color: #a5a8f3;
+  text-decoration: underline;
+}
+
 .sidebar-footer .footer-year {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.3);

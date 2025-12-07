@@ -210,15 +210,43 @@ export class Lobby {
     const codeInput = document.createElement('input');
     codeInput.type = 'text';
     codeInput.className = 'glass-input room-code-input';
-    codeInput.placeholder = 'XXXX';
+    codeInput.placeholder = 'Enter room code (e.g., abc123-def456...)';
     codeInput.value = this.roomCode;
-    codeInput.maxLength = 6;
+    codeInput.maxLength = 50;
+    codeInput.style.fontSize = '14px';
+    codeInput.style.letterSpacing = '0';
     codeInput.addEventListener('input', (e) => {
       const input = e.target as HTMLInputElement;
-      input.value = input.value.toUpperCase();
-      this.roomCode = input.value;
+      // Keep lowercase for UUID format
+      this.roomCode = input.value.trim();
     });
     form.appendChild(codeInput);
+
+    // Paste button for easy pasting
+    const pasteBtn = document.createElement('button');
+    pasteBtn.type = 'button';
+    pasteBtn.className = 'glass-button secondary';
+    pasteBtn.style.marginTop = 'var(--spacing-sm)';
+    pasteBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      Paste Code
+    `;
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          codeInput.value = text.trim();
+          this.roomCode = text.trim();
+          Toast.success('Code pasted!');
+        }
+      } catch (e) {
+        Toast.error('Cannot access clipboard');
+      }
+    });
+    form.appendChild(pasteBtn);
 
     // Player name input
     const nameLabel = document.createElement('label');
@@ -260,7 +288,8 @@ export class Lobby {
       }
       
       if (this.onJoinRoom) {
-        this.onJoinRoom(this.roomCode.trim().toUpperCase(), this.playerName.trim());
+        // Don't uppercase - UUID codes are lowercase
+        this.onJoinRoom(this.roomCode.trim(), this.playerName.trim());
       }
     });
     form.appendChild(joinBtn);
