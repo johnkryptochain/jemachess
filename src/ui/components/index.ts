@@ -44,3 +44,7 @@ export { AnalysisPanel } from './AnalysisPanel';
 export { DifficultySelector, getDifficultyName, getDifficultyRating } from './DifficultySelector';
 export { GameReview } from './GameReview';
 export { Tutorial } from './Tutorial';
+
+// Chat components
+export { Chat } from './Chat';
+export { GameChat } from './GameChat';

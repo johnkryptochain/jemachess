@@ -47,6 +47,11 @@ const USER_TIMEOUT = 60000; // 1 minute (reduced for faster detection)
 const PRESENCE_INTERVAL = 15000; // 15 seconds (more frequent updates)
 const INITIAL_PRESENCE_DELAY = 1000; // 1 second delay for initial presence
 
+// LocalStorage keys for session persistence
+const STORAGE_KEY_USER_ID = 'chess-chat-user-id';
+const STORAGE_KEY_USER_NAME = 'chess-chat-user-name';
+const STORAGE_KEY_SESSION = 'chess-chat-session';
+
 // Public Gun relay peers for discovery (no account needed)
 const GUN_PEERS = [
   'https://gun-manhattan.herokuapp.com/gun',
@@ -89,6 +94,7 @@ export class Chat {
   constructor(container?: HTMLElement) {
     this.container = container || null;
     this.loadMessages();
+    this.loadSession();
   }
   
   // ============================================
@@ -224,7 +230,7 @@ export class Chat {
   /**
    * Connect to the chat network using Gun.js
    */
-  async connect(playerName: string): Promise<void> {
+  async connect(playerName: string, existingUserId?: string): Promise<void> {
     if (this.state.isConnecting || this.state.isConnected) return;
     
     this.state.isConnecting = true;
@@ -232,8 +238,8 @@ export class Chat {
     this.render();
     
     try {
-      // Generate a unique user ID
-      this.state.localUserId = this.generateUserId();
+      // Use existing user ID if provided (for session restore), otherwise generate new one
+      this.state.localUserId = existingUserId || this.generateUserId();
       
       // Initialize Gun with public relay peers
       this.gun = Gun({
@@ -276,11 +282,17 @@ export class Chat {
       // Start cleanup of stale users
       this.startUserCleanup();
       
-      // Add system message
-      this.addSystemMessage(`Vous avez rejoint le chat en tant que ${playerName}`);
+      // Save session for auto-reconnect on page refresh
+      this.saveSession();
       
-      // Send join message to others
-      this.sendJoinMessage();
+      // Add system message (only if not restoring session)
+      if (!existingUserId) {
+        this.addSystemMessage(`Vous avez rejoint le chat en tant que ${playerName}`);
+        // Send join message to others
+        this.sendJoinMessage();
+      } else {
+        this.addSystemMessage(`Reconnecté en tant que ${playerName}`);
+      }
       
       this.render();
       
@@ -320,6 +332,9 @@ export class Chat {
     this.state.users.clear();
     this.state.isConnected = false;
     this.state.localUserId = '';
+    
+    // Clear saved session
+    this.clearSession();
     
     // Note: Gun doesn't have a destroy method, it will be garbage collected
     this.gun = null;
@@ -820,6 +835,61 @@ export class Chat {
       }
     } catch (error) {
       console.error('Failed to load messages:', error);
+    }
+  }
+  
+  /**
+   * Save session to localStorage for auto-reconnect
+   */
+  private saveSession(): void {
+    try {
+      localStorage.setItem(STORAGE_KEY_USER_ID, this.state.localUserId);
+      localStorage.setItem(STORAGE_KEY_USER_NAME, this.state.localName);
+      localStorage.setItem(STORAGE_KEY_SESSION, Date.now().toString());
+    } catch (error) {
+      console.error('Failed to save session:', error);
+    }
+  }
+  
+  /**
+   * Load session from localStorage and auto-reconnect
+   */
+  private loadSession(): void {
+    try {
+      const savedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
+      const savedUserName = localStorage.getItem(STORAGE_KEY_USER_NAME);
+      const savedSessionTime = localStorage.getItem(STORAGE_KEY_SESSION);
+      
+      if (savedUserId && savedUserName && savedSessionTime) {
+        // Check if session is still valid (less than 24 hours old)
+        const sessionAge = Date.now() - parseInt(savedSessionTime, 10);
+        const maxSessionAge = 24 * 60 * 60 * 1000; // 24 hours
+        
+        if (sessionAge < maxSessionAge) {
+          // Auto-reconnect with saved credentials after a short delay
+          setTimeout(() => {
+            this.connect(savedUserName, savedUserId);
+          }, 500);
+        } else {
+          // Session expired, clear it
+          this.clearSession();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load session:', error);
+    }
+  }
+  
+  /**
+   * Clear saved session
+   */
+  private clearSession(): void {
+    try {
+      localStorage.removeItem(STORAGE_KEY_USER_ID);
+      localStorage.removeItem(STORAGE_KEY_USER_NAME);
+      localStorage.removeItem(STORAGE_KEY_SESSION);
+    } catch (error) {
+      console.error('Failed to clear session:', error);
     }
   }
 }

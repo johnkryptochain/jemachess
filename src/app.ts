@@ -31,6 +31,7 @@ import {
   type GameSettings
 } from './ui/components';
 import { Chat } from './ui/components/Chat';
+import { GameChat } from './ui/components/GameChat';
 import { Tutorial } from './ui/components/Tutorial';
 import { ChessTimer, TIME_CONTROLS, type TimerConfig } from './utils/Timer';
 import { SoundManager, getSoundManager } from './utils/SoundManager';
@@ -90,8 +91,11 @@ export class App {
   // Keyboard handler
   private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
   
-  // P2P Chat
+  // Global Chat
   private chat: Chat | null = null;
+  
+  // Game Chat (P2P private chat during games)
+  private gameChat: GameChat | null = null;
   
   // Tutorial
   private tutorial: Tutorial | null = null;
@@ -1045,6 +1049,9 @@ export class App {
       }
     }
     
+    // Initialize game chat for P2P communication
+    this.initializeGameChat(isHost);
+    
     // Start the timer
     this.timer?.start(PieceColor.WHITE);
     store.startTimer();
@@ -1335,6 +1342,12 @@ export class App {
       this.gameReview = null;
     }
     
+    // Clean up game chat
+    if (this.gameChat) {
+      this.gameChat.destroy();
+      this.gameChat = null;
+    }
+    
     // Exit review mode
     store.exitReviewMode();
     
@@ -1577,6 +1590,34 @@ export class App {
     };
     
     console.log('GameSync initialized for', playerColor === PieceColor.WHITE ? 'White' : 'Black');
+  }
+
+  /**
+   * Initialize game chat for P2P communication
+   */
+  private initializeGameChat(isHost: boolean): void {
+    if (!this.peerConnection) return;
+    
+    // Clean up existing game chat
+    if (this.gameChat) {
+      this.gameChat.destroy();
+    }
+    
+    // Create new game chat
+    this.gameChat = new GameChat();
+    
+    // Get player names
+    const state = store.getState();
+    const localPlayerName = isHost ? (state.players.white || 'Vous') : (state.players.black || 'Vous');
+    const remotePlayerName = isHost ? (state.players.black || 'Adversaire') : (state.players.white || 'Adversaire');
+    
+    // Initialize with peer connection
+    this.gameChat.initialize(this.peerConnection, localPlayerName, remotePlayerName);
+    
+    // Show the chat
+    this.gameChat.show();
+    
+    console.log('Game chat initialized');
   }
 
   /**
@@ -2727,6 +2768,12 @@ export class App {
     if (this.gameReview) {
       this.gameReview.destroy();
       this.gameReview = null;
+    }
+    
+    // Clean up game chat
+    if (this.gameChat) {
+      this.gameChat.destroy();
+      this.gameChat = null;
     }
     
     // Clean up UI components
