@@ -296,6 +296,8 @@ export class Board {
       pieceElement.dataset.file = file.toString();
       pieceElement.dataset.rank = rank.toString();
       pieceElement.dataset.pieceId = `${piece.color}-${piece.type}-${file}-${rank}`;
+      pieceElement.dataset.pieceColor = piece.color;
+      pieceElement.dataset.pieceType = piece.type;
       
       square.appendChild(pieceElement);
       square.classList.add('has-piece');
