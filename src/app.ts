@@ -1168,99 +1168,20 @@ export class App {
       gameActions.appendChild(hintBtn);
     }
     
-    // Add floating hint button for mobile (always visible on touch devices)
-    this.addMobileHintButton();
+    // Add styles for hint button
+    this.addHintButtonStyles();
   }
   
   /**
-   * Add floating hint button for mobile devices
+   * Add styles for hint button
    */
-  private addMobileHintButton(): void {
-    // Remove existing mobile hint button if any
-    const existingBtn = document.getElementById('mobile-hint-btn');
-    if (existingBtn) {
-      existingBtn.remove();
-    }
-    
-    const mobileHintBtn = document.createElement('button');
-    mobileHintBtn.id = 'mobile-hint-btn';
-    mobileHintBtn.className = 'mobile-hint-btn';
-    mobileHintBtn.innerHTML = `
-      <span class="hint-icon">?</span>
-    `;
-    mobileHintBtn.title = 'Indice';
-    mobileHintBtn.addEventListener('click', () => this.showHint());
-    
-    // Add styles for mobile hint button
-    this.addMobileHintButtonStyles();
-    
-    document.body.appendChild(mobileHintBtn);
-  }
-  
-  /**
-   * Add styles for mobile hint button
-   */
-  private addMobileHintButtonStyles(): void {
-    const styleId = 'mobile-hint-btn-styles';
+  private addHintButtonStyles(): void {
+    const styleId = 'hint-btn-styles';
     if (document.getElementById(styleId)) return;
     
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
-      .mobile-hint-btn {
-        display: none;
-        position: fixed;
-        bottom: 100px;
-        right: 20px;
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #7d82ea 0%, #5356a8 100%);
-        border: none;
-        color: white;
-        cursor: pointer;
-        z-index: 1000;
-        box-shadow: 0 4px 12px rgba(125, 130, 234, 0.4);
-        transition: all 0.2s;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .mobile-hint-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(125, 130, 234, 0.5);
-      }
-      
-      .mobile-hint-btn:active {
-        transform: scale(0.95);
-      }
-      
-      .mobile-hint-btn .hint-icon {
-        font-size: 28px;
-        font-weight: bold;
-        line-height: 1;
-      }
-      
-      /* Show on touch devices and small screens */
-      @media (max-width: 768px), (pointer: coarse) {
-        .mobile-hint-btn {
-          display: flex;
-        }
-      }
-      
-      /* Hide hint button text on small screens in game actions */
-      @media (max-width: 768px) {
-        .hint-btn .hint-text,
-        .hint-btn .hint-key {
-          display: none;
-        }
-        
-        .hint-btn {
-          padding: 8px 12px;
-          min-width: 40px;
-        }
-      }
-      
       /* Hint button in game actions */
       .hint-btn {
         display: flex;
@@ -1290,6 +1211,19 @@ export class App {
         justify-content: center;
         background: rgba(255, 255, 255, 0.2);
         border-radius: 50%;
+      }
+      
+      /* Responsive hint button - hide text on small screens */
+      @media (max-width: 768px) {
+        .hint-btn .hint-text,
+        .hint-btn .hint-key {
+          display: none;
+        }
+        
+        .hint-btn {
+          padding: 8px 12px;
+          min-width: 40px;
+        }
       }
     `;
     document.head.appendChild(style);
@@ -1758,12 +1692,6 @@ export class App {
     this.isCoachMode = false;
     store.disableAI();
     store.disableCoachMode();
-    
-    // Remove mobile hint button
-    const mobileHintBtn = document.getElementById('mobile-hint-btn');
-    if (mobileHintBtn) {
-      mobileHintBtn.remove();
-    }
     
     // Clean up move arrows
     if (this.moveArrows) {

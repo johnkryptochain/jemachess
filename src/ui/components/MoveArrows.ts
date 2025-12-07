@@ -20,6 +20,28 @@ interface ArrowConfig {
 }
 
 /**
+ * Get responsive arrow scale based on viewport width
+ * Returns a multiplier for arrow dimensions
+ */
+function getResponsiveArrowScale(): number {
+  if (typeof window === 'undefined') return 1;
+  
+  const width = window.innerWidth;
+  
+  // Smartphone (< 480px): smaller arrows
+  if (width < 480) return 0.6;
+  
+  // Small tablet / large phone (480-768px): medium-small arrows
+  if (width < 768) return 0.75;
+  
+  // Tablet (768-1024px): medium arrows
+  if (width < 1024) return 0.85;
+  
+  // Laptop/Desktop (>= 1024px): full size arrows
+  return 1;
+}
+
+/**
  * Arrow types with their default configurations
  */
 /**
@@ -155,20 +177,29 @@ export class MoveArrows {
   }
 
   /**
-   * Create an arrow marker definition
+   * Create an arrow marker definition with responsive sizing
    */
   private createArrowMarker(id: string, config: ArrowConfig): SVGMarkerElement {
+    // Get responsive scale for marker dimensions
+    const scale = getResponsiveArrowScale();
+    const markerSize = Math.round(10 * scale);
+    const refX = Math.round(9 * scale);
+    const refY = Math.round(5 * scale);
+    
     const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
     marker.setAttribute('id', `arrow-${id}`);
-    marker.setAttribute('markerWidth', '10');
-    marker.setAttribute('markerHeight', '10');
-    marker.setAttribute('refX', '9');
-    marker.setAttribute('refY', '5');
+    marker.setAttribute('markerWidth', markerSize.toString());
+    marker.setAttribute('markerHeight', markerSize.toString());
+    marker.setAttribute('refX', refX.toString());
+    marker.setAttribute('refY', refY.toString());
     marker.setAttribute('orient', 'auto');
     marker.setAttribute('markerUnits', 'strokeWidth');
 
+    // Scale the path coordinates
+    const pathSize = markerSize;
+    const halfSize = pathSize / 2;
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', 'M0,0 L0,10 L10,5 z');
+    path.setAttribute('d', `M0,0 L0,${pathSize} L${pathSize},${halfSize} z`);
     path.setAttribute('fill', config.color);
     path.setAttribute('opacity', config.opacity.toString());
 
@@ -245,13 +276,16 @@ export class MoveArrows {
   }
 
   /**
-   * Render a single arrow
+   * Render a single arrow with responsive sizing
    */
   private renderArrow(arrow: Arrow): void {
     if (!this.svg) return;
 
     const fromCoords = this.positionToCoords(arrow.from);
     const toCoords = this.positionToCoords(arrow.to);
+
+    // Get responsive scale for arrow dimensions
+    const scale = getResponsiveArrowScale();
 
     // Calculate arrow direction and shorten it slightly
     const dx = toCoords.x - fromCoords.x;
@@ -260,14 +294,17 @@ export class MoveArrows {
     const unitX = dx / length;
     const unitY = dy / length;
 
-    // Shorten arrow to not overlap with piece
-    const shortenStart = this.squareSize * 0.2;
-    const shortenEnd = this.squareSize * 0.3;
+    // Shorten arrow to not overlap with piece (scaled)
+    const shortenStart = this.squareSize * 0.2 * scale;
+    const shortenEnd = this.squareSize * 0.3 * scale;
 
     const startX = fromCoords.x + unitX * shortenStart;
     const startY = fromCoords.y + unitY * shortenStart;
     const endX = toCoords.x - unitX * shortenEnd;
     const endY = toCoords.y - unitY * shortenEnd;
+
+    // Apply responsive scale to arrow width
+    const scaledWidth = arrow.config.width * scale;
 
     // Create the arrow line
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -276,7 +313,7 @@ export class MoveArrows {
     line.setAttribute('x2', endX.toString());
     line.setAttribute('y2', endY.toString());
     line.setAttribute('stroke', arrow.config.color);
-    line.setAttribute('stroke-width', arrow.config.width.toString());
+    line.setAttribute('stroke-width', scaledWidth.toString());
     line.setAttribute('stroke-opacity', arrow.config.opacity.toString());
     line.setAttribute('stroke-linecap', 'round');
     line.setAttribute('marker-end', `url(#arrow-${arrow.type})`);
