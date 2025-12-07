@@ -43,8 +43,9 @@ interface ChatState {
 // Global chat room identifier
 const CHAT_ROOM_ID = 'chess-game-global-chat-v1';
 const MAX_MESSAGES = 200;
-const USER_TIMEOUT = 120000; // 2 minutes
-const PRESENCE_INTERVAL = 30000; // 30 seconds
+const USER_TIMEOUT = 60000; // 1 minute (reduced for faster detection)
+const PRESENCE_INTERVAL = 15000; // 15 seconds (more frequent updates)
+const INITIAL_PRESENCE_DELAY = 1000; // 1 second delay for initial presence
 
 // Public Gun relay peers for discovery (no account needed)
 const GUN_PEERS = [
@@ -255,8 +256,19 @@ export class Chat {
       this.state.isConnected = true;
       this.state.isConnecting = false;
       
-      // Announce presence
+      // Announce presence immediately
       this.announcePresence();
+      
+      // Announce presence again after a short delay to ensure sync
+      setTimeout(() => {
+        this.announcePresence();
+      }, INITIAL_PRESENCE_DELAY);
+      
+      // And once more after 3 seconds for reliability
+      setTimeout(() => {
+        this.announcePresence();
+        this.requestPresenceRefresh();
+      }, 3000);
       
       // Start presence heartbeat
       this.startPresenceHeartbeat();
@@ -476,11 +488,37 @@ export class Chat {
   }
   
   /**
+   * Request a presence refresh from all users by re-subscribing
+   */
+  private requestPresenceRefresh(): void {
+    if (!this.usersNode) return;
+    
+    // Force a re-read of all users by iterating through the node
+    this.usersNode.map().once((data: string | null, oderId: string) => {
+      if (!data || oderId === this.state.localUserId) return;
+      
+      try {
+        const user: ChatUser = JSON.parse(data);
+        
+        // Check if user is still active
+        if (Date.now() - user.lastSeen <= USER_TIMEOUT) {
+          this.state.users.set(user.id, user);
+          this.updateStatus();
+        }
+      } catch (error) {
+        // Invalid user data, ignore
+      }
+    });
+  }
+  
+  /**
    * Start presence heartbeat
    */
   private startPresenceHeartbeat(): void {
     this.presenceInterval = setInterval(() => {
       this.announcePresence();
+      // Also refresh our view of other users periodically
+      this.requestPresenceRefresh();
     }, PRESENCE_INTERVAL);
   }
   
@@ -502,7 +540,7 @@ export class Chat {
       if (changed) {
         this.updateStatus();
       }
-    }, 30000);
+    }, 15000); // Check every 15 seconds instead of 30
   }
   
   /**
