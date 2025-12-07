@@ -22,38 +22,61 @@ interface ArrowConfig {
 /**
  * Arrow types with their default configurations
  */
-const ARROW_CONFIGS: Record<string, ArrowConfig> = {
-  lastMove: {
-    color: '#ffcc00',
-    opacity: 0.6,
-    width: 10,
-    headSize: 20,
-  },
-  suggestion: {
-    color: '#00cc66',
-    opacity: 0.7,
-    width: 12,
-    headSize: 24,
-  },
-  analysis: {
-    color: '#3399ff',
-    opacity: 0.6,
-    width: 10,
-    headSize: 20,
-  },
-  threat: {
-    color: '#ff3333',
-    opacity: 0.6,
-    width: 10,
-    headSize: 20,
-  },
-  custom: {
-    color: '#9966ff',
-    opacity: 0.6,
-    width: 10,
-    headSize: 20,
-  },
-};
+/**
+ * Get computed CSS variable value
+ */
+function getCSSVariable(name: string, fallback: string): string {
+  if (typeof document !== 'undefined') {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+  }
+  return fallback;
+}
+
+/**
+ * Get arrow configurations with theme-aware colors
+ */
+function getArrowConfigs(): Record<string, ArrowConfig> {
+  // Get theme colors from CSS variables
+  const primaryColor = getCSSVariable('--color-primary', '#7d82ea');
+  const primaryLight = getCSSVariable('--color-primary-light', '#9a9ef0');
+  
+  return {
+    lastMove: {
+      color: '#d4a84b', // Muted gold that complements beige/brown board
+      opacity: 0.7,
+      width: 10,
+      headSize: 20,
+    },
+    suggestion: {
+      color: primaryColor, // Use theme primary color (muted purple)
+      opacity: 0.8,
+      width: 12,
+      headSize: 24,
+    },
+    analysis: {
+      color: primaryLight, // Use lighter theme color for analysis
+      opacity: 0.7,
+      width: 10,
+      headSize: 20,
+    },
+    threat: {
+      color: '#c45c5c', // Muted red for threats
+      opacity: 0.7,
+      width: 10,
+      headSize: 20,
+    },
+    custom: {
+      color: primaryColor, // Use theme primary for custom arrows
+      opacity: 0.6,
+      width: 10,
+      headSize: 20,
+    },
+  };
+}
+
+// Initialize with default values, will be updated when component is created
+let ARROW_CONFIGS: Record<string, ArrowConfig> = getArrowConfigs();
 
 /**
  * Arrow data structure
@@ -77,6 +100,8 @@ export class MoveArrows {
 
   constructor(container: HTMLElement) {
     this.container = container;
+    // Refresh arrow configs to get current theme colors
+    ARROW_CONFIGS = getArrowConfigs();
     this.createSVG();
     this.setupResizeObserver();
   }
