@@ -49,8 +49,8 @@
 }
 
 .analysis-btn.active {
-  background: rgba(100, 200, 100, 0.3);
-  color: #6c6;
+  background: rgba(125, 130, 234, 0.3);
+  color: #7d82ea;
 }
 
 /* Evaluation Bar */
@@ -125,13 +125,13 @@
 .best-move-value {
   font-size: 16px;
   font-weight: 600;
-  color: #6c6;
+  color: #7d82ea;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .best-move-value:hover {
-  color: #8e8;
+  color: #9a9ef0;
 }
 
 .best-move-value.no-move {
@@ -217,8 +217,8 @@
 }
 
 .arrow-suggestion {
-  stroke: #00cc66;
-  stroke-opacity: 0.7;
+  stroke: #7d82ea;
+  stroke-opacity: 0.85;
 }
 
 .arrow-analysis {
@@ -645,15 +645,15 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: rgba(100, 200, 100, 0.2);
-  border: 1px solid rgba(100, 200, 100, 0.4);
-  color: #6c6;
+  background: rgba(125, 130, 234, 0.2);
+  border: 1px solid rgba(125, 130, 234, 0.4);
+  color: #7d82ea;
   transition: all 0.2s;
 }
 
 .hint-btn:hover {
-  background: rgba(100, 200, 100, 0.3);
-  border-color: rgba(100, 200, 100, 0.6);
+  background: rgba(125, 130, 234, 0.3);
+  border-color: rgba(125, 130, 234, 0.6);
 }
 
 /* AI Thinking Indicator */
