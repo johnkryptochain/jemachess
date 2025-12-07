@@ -137,8 +137,8 @@ export class RoomManager {
    * Join an existing room as guest
    */
   async joinRoom(roomCode: string, playerName: string): Promise<Room> {
-    // Normalize room code
-    const normalizedCode = roomCode.toUpperCase().trim();
+    // Normalize room code - keep case for UUID compatibility
+    const normalizedCode = roomCode.trim();
     
     // Create local player
     this.localPlayer = {

@@ -1005,13 +1005,19 @@ export class App {
 
   /**
    * Start an online game
+   * @param isHost Whether this player is the host
    */
-  private startOnlineGame(): void {
+  private startOnlineGame(isHost: boolean = false): void {
     // Start new game in store
     store.startNewGame('online', {
       initial: TIME_CONTROLS.RAPID_10_0.initialTime,
       increment: TIME_CONTROLS.RAPID_10_0.increment,
     });
+    
+    // Set player color based on host/guest status
+    // Host plays white, guest plays black
+    const playerColor = isHost ? PieceColor.WHITE : PieceColor.BLACK;
+    store.setPlayerColor(playerColor);
     
     // Initialize timer
     this.initializeTimer(TIME_CONTROLS.RAPID_10_0);
@@ -1022,9 +1028,23 @@ export class App {
     // Show game screen
     this.showScreen('game');
     
+    // Configure the board to restrict moves to player's color
+    if (this.gameScreen) {
+      const board = this.gameScreen.getBoard();
+      if (board) {
+        board.setPlayerColor(playerColor);
+        // Flip board for black player so they see from their perspective
+        if (playerColor === PieceColor.BLACK) {
+          board.setFlipped(true);
+        }
+      }
+    }
+    
     // Start the timer
     this.timer?.start(PieceColor.WHITE);
     store.startTimer();
+    
+    Toast.info(`Vous jouez les ${playerColor === PieceColor.WHITE ? 'Blancs' : 'Noirs'}`);
   }
 
   /**
@@ -1331,6 +1351,9 @@ export class App {
         this.peerConnection = new PeerConnection();
       }
       
+      // Set up connection event handlers BEFORE creating room
+      this.setupPeerConnectionHandlers(true, playerName);
+      
       // Create room (this also connects to the signaling server)
       const roomId = await this.peerConnection.createRoom();
       
@@ -1339,15 +1362,12 @@ export class App {
       store.setRoomCode(roomCode);
       store.setConnectionState({ status: ConnectionStatus.CONNECTED });
       
-      Toast.success(`Salle créée ! Partagez ce code : ${roomCode}`);
+      Toast.success(`Salle créée ! Code: ${roomCode.substring(0, 8)}...`);
       
       // Update lobby UI
       if (this.lobby) {
         this.lobby.setRoomCode(roomCode);
       }
-      
-      // Set up connection event handlers
-      this.setupPeerConnectionHandlers();
       
     } catch (error) {
       console.error('Failed to create room:', error);
@@ -1364,17 +1384,21 @@ export class App {
   private async handleJoinRoom(code: string, playerName: string): Promise<void> {
     try {
       store.setConnectionState({ status: ConnectionStatus.CONNECTING });
-      store.setPlayers('Waiting...', playerName);
+      store.setPlayers('En attente...', playerName);
       
       // Initialize peer connection if needed
       if (!this.peerConnection) {
         this.peerConnection = new PeerConnection();
       }
       
+      // Set up connection event handlers BEFORE joining
+      this.setupPeerConnectionHandlers(false, playerName);
+      
       // The room code is the full peer ID of the host
-      // Users enter the short code, we need to find the full peer ID
-      // For now, we'll try to connect directly with the code as peer ID
+      // Keep the code as-is (don't convert to uppercase - UUIDs are case-sensitive)
       const roomId = code.trim();
+      
+      console.log('Joining room with ID:', roomId);
       
       // Join the room (this connects to the signaling server and then to the host)
       await this.peerConnection.joinRoom(roomId);
@@ -1382,18 +1406,15 @@ export class App {
       store.setRoomCode(code);
       store.setConnectionState({ status: ConnectionStatus.CONNECTED });
       
-      Toast.success('Connexion à la salle réussie');
-      
-      // Set up connection event handlers
-      this.setupPeerConnectionHandlers();
+      Toast.success('Connexion réussie !');
       
       // Set up game sync
       this.setupGameSync();
       
-      // Start the game after successful connection
+      // Start the game as guest (plays black)
       setTimeout(() => {
-        this.startOnlineGame();
-      }, 1000);
+        this.startOnlineGame(false); // false = guest
+      }, 500);
       
     } catch (error) {
       console.error('Failed to join room:', error);
@@ -1404,16 +1425,29 @@ export class App {
 
   /**
    * Set up peer connection event handlers
+   * @param isHost Whether this player is the host
+   * @param playerName The player's name
    */
-  private setupPeerConnectionHandlers(): void {
+  private setupPeerConnectionHandlers(isHost: boolean = false, playerName: string = 'Joueur'): void {
     if (!this.peerConnection) return;
     
     this.peerConnection.onConnected = (peerId: string) => {
-      Toast.success('Opponent connected!');
+      console.log('Peer connected:', peerId, 'isHost:', isHost);
+      Toast.success('Adversaire connecté !');
       store.setConnectionState({ opponentId: peerId });
+      
+      // If host, start the game when opponent connects
+      if (isHost) {
+        store.setPlayers(playerName, 'Adversaire');
+        Toast.info('Démarrage de la partie...');
+        setTimeout(() => {
+          this.startOnlineGame(true); // true = host
+        }, 500);
+      }
     };
     
     this.peerConnection.onDisconnected = (reason: string) => {
+      console.log('Peer disconnected:', reason);
       Toast.warning(`Déconnecté : ${reason}`);
       this.handleDisconnect();
     };
@@ -1425,6 +1459,15 @@ export class App {
     
     this.peerConnection.onLatencyUpdate = (latency: number) => {
       store.setConnectionState({ latency });
+    };
+    
+    // Handle incoming messages for game sync
+    this.peerConnection.onMessage = (message) => {
+      console.log('Received message:', message);
+      // GameSync will handle game-related messages
+      if (this.gameSync) {
+        // GameSync has its own message handler
+      }
     };
   }
 

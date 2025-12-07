@@ -272,11 +272,20 @@ export class Board {
     const piece = this.game.getPieceAt(position);
     if (!piece) return;
     
-    // Allow dragging own pieces (for premove, allow dragging player's pieces even when not their turn)
-    const isOwnPiece = piece.color === this.game.currentTurn;
-    const canPremove = this.premoveEnabled && this.playerColor && piece.color === this.playerColor && !isOwnPiece;
+    // Check if it's the current turn
+    const isCurrentTurn = piece.color === this.game.currentTurn;
     
-    if (!isOwnPiece && !canPremove) return;
+    // In online games, only allow moving your own color
+    // playerColor is set for online games, null for local games
+    const isPlayersPiece = this.playerColor === null || piece.color === this.playerColor;
+    
+    // Allow dragging if:
+    // 1. It's your piece AND it's your turn (normal move)
+    // 2. It's your piece but not your turn (premove, if enabled)
+    const canMove = isPlayersPiece && isCurrentTurn;
+    const canPremove = this.premoveEnabled && isPlayersPiece && !isCurrentTurn;
+    
+    if (!canMove && !canPremove) return;
     
     event.preventDefault();
     
@@ -344,11 +353,20 @@ export class Board {
     const piece = this.game.getPieceAt(position);
     if (!piece) return;
     
-    // Allow dragging own pieces (for premove, allow dragging player's pieces even when not their turn)
-    const isOwnPiece = piece.color === this.game.currentTurn;
-    const canPremove = this.premoveEnabled && this.playerColor && piece.color === this.playerColor && !isOwnPiece;
+    // Check if it's the current turn
+    const isCurrentTurn = piece.color === this.game.currentTurn;
     
-    if (!isOwnPiece && !canPremove) return;
+    // In online games, only allow moving your own color
+    // playerColor is set for online games, null for local games
+    const isPlayersPiece = this.playerColor === null || piece.color === this.playerColor;
+    
+    // Allow dragging if:
+    // 1. It's your piece AND it's your turn (normal move)
+    // 2. It's your piece but not your turn (premove, if enabled)
+    const canMove = isPlayersPiece && isCurrentTurn;
+    const canPremove = this.premoveEnabled && isPlayersPiece && !isCurrentTurn;
+    
+    if (!canMove && !canPremove) return;
     
     event.preventDefault();
     
@@ -539,8 +557,15 @@ export class Board {
   selectSquare(position: Position): void {
     const piece = this.game.getPieceAt(position);
     
-    // If clicking on own piece (current turn), select it
-    if (piece && piece.color === this.game.currentTurn) {
+    // Check if it's the current turn
+    const isCurrentTurn = piece && piece.color === this.game.currentTurn;
+    
+    // In online games, only allow selecting your own color
+    // playerColor is set for online games, null for local games
+    const isPlayersPiece = piece && (this.playerColor === null || piece.color === this.playerColor);
+    
+    // If clicking on own piece and it's your turn, select it
+    if (piece && isPlayersPiece && isCurrentTurn) {
       this.selectedSquare = position;
       this.legalMoves = this.game.getLegalMoves(position);
       this.update();
@@ -548,8 +573,7 @@ export class Board {
     }
     
     // If clicking on player's piece but not their turn (premove)
-    if (piece && this.premoveEnabled && this.playerColor &&
-        piece.color === this.playerColor && piece.color !== this.game.currentTurn) {
+    if (piece && this.premoveEnabled && isPlayersPiece && !isCurrentTurn) {
       this.selectedSquare = position;
       // For premoves, we show all pseudo-legal moves (simplified - just show where piece could go)
       this.legalMoves = this.getPremoveMoves(position);
