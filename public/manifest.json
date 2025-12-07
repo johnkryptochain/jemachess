@@ -34,28 +34,28 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Chess game in progress"
+      "label": "Partie d'échecs en cours"
     },
     {
       "src": "/screenshots/menu.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Main menu"
+      "label": "Menu principal"
     }
   ],
   "shortcuts": [
     {
-      "name": "New Local Game",
+      "name": "Nouvelle partie locale",
       "short_name": "Local",
-      "description": "Start a new local game",
+      "description": "Démarrer une nouvelle partie locale",
       "url": "/?mode=local",
       "icons": [{ "src": "/icons/shortcut-local.png", "sizes": "96x96" }]
     },
     {
-      "name": "Play Online",
-      "short_name": "Online",
-      "description": "Play online with a friend",
+      "name": "Jouer en ligne",
+      "short_name": "En ligne",
+      "description": "Jouer en ligne avec un ami",
       "url": "/?mode=online",
       "icons": [{ "src": "/icons/shortcut-online.png", "sizes": "96x96" }]
     }
