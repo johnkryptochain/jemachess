@@ -93,7 +93,11 @@ export class Board {
   private renderSquares(): void {
     if (!this.boardElement) return;
     
-    this.boardElement.innerHTML = '';
+    // Clear all existing content to prevent duplicates
+    while (this.boardElement.firstChild) {
+      this.boardElement.removeChild(this.boardElement.firstChild);
+    }
+    
     const board = this.game.getBoard();
     
     for (let rank = 7; rank >= 0; rank--) {

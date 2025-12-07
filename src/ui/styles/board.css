@@ -160,15 +160,28 @@
   max-width: 100%;
   max-height: 100%;
   position: relative;
+  /* Prevent any rendering artifacts */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
-/* Ensure only one piece image per square */
+/* Ensure only one piece image per square - multiple selectors for specificity */
 .square .piece {
   position: relative;
 }
 
-.square .piece:not(:first-of-type) {
+/* Hide any duplicate pieces - use multiple selectors for maximum specificity */
+.square .piece:not(:first-of-type),
+.square .piece ~ .piece,
+.square img.piece:nth-of-type(n+2) {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
 }
 
 .piece:hover {
