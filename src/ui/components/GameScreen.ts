@@ -368,9 +368,13 @@ export class GameScreen {
     resignBtn.addEventListener('click', () => {
       if (confirm('Êtes-vous sûr de vouloir abandonner ?')) {
         this.game.resign();
-        this.checkGameOver();
+        // Don't show game over overlay, directly exit to landing page
         if (this.onResign) {
           this.onResign();
+        }
+        // Call onExit to return to landing page
+        if (this.onExit) {
+          this.onExit();
         }
       }
     });
