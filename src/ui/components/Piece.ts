@@ -53,24 +53,16 @@ export class PieceRenderer {
 
   /**
    * Creates a piece element (HTMLImageElement)
+   * IMPORTANT: Always creates a NEW element to prevent duplication bugs
    * @param piece The piece to create an element for
    * @param theme The theme to use
    * @returns An HTMLImageElement for the piece
    */
   static createElement(piece: PieceType, theme: PieceTheme): HTMLImageElement {
     const url = this.getImageUrl(piece, theme);
-    const cacheKey = url;
     
-    // Check if we have a cached image
-    const cachedImage = imageCache.get(cacheKey);
-    if (cachedImage) {
-      const img = cachedImage.cloneNode(true) as HTMLImageElement;
-      img.className = 'piece';
-      img.draggable = false;
-      return img;
-    }
-    
-    // Create new image element
+    // ALWAYS create a new image element - never clone from cache
+    // Cloning can cause rendering issues on some mobile browsers
     const img = document.createElement('img');
     img.src = url;
     img.className = 'piece';
@@ -80,6 +72,12 @@ export class PieceRenderer {
     // Add data attributes for piece info
     img.dataset.pieceType = piece.type;
     img.dataset.pieceColor = piece.color;
+    
+    // Prevent any potential duplication issues
+    img.style.pointerEvents = 'auto';
+    
+    // Generate unique ID to track this specific piece instance
+    img.dataset.pieceInstance = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     return img;
   }

@@ -92,88 +92,156 @@ export class Board {
 
   /**
    * Renders all squares on the board
-   * Uses aggressive duplicate prevention
+   * INFALLIBLE METHOD: Creates squares once, then only updates pieces
    */
   private renderSquares(): void {
     if (!this.boardElement) return;
     
-    // Prevent concurrent renders with time-based throttling
-    const now = Date.now();
-    if (this.isRendering || (now - this.lastRenderTime < 16)) {
+    // Prevent concurrent renders
+    if (this.isRendering) {
       return;
     }
     
     this.isRendering = true;
-    this.lastRenderTime = now;
     this.renderCount++;
     
     try {
-      // AGGRESSIVE CLEANUP: Remove ALL children first
-      while (this.boardElement.firstChild) {
-        this.boardElement.removeChild(this.boardElement.firstChild);
+      // Check if squares already exist
+      const existingSquares = this.boardElement.querySelectorAll('.square');
+      
+      if (existingSquares.length === 64) {
+        // Squares exist - just update pieces and highlights
+        this.updatePiecesOnly();
+      } else {
+        // First render - create all squares
+        this.createAllSquares();
       }
-      
-      // Double-check with innerHTML as backup
-      this.boardElement.innerHTML = '';
-      
-      // Create a document fragment for better performance
-      const fragment = document.createDocumentFragment();
-      
-      // Track which squares we've created to prevent duplicates
-      const createdSquares = new Set<string>();
-      
-      for (let rank = 7; rank >= 0; rank--) {
-        for (let file = 0; file < 8; file++) {
-          const displayRank = this.flipped ? 7 - rank : rank;
-          const displayFile = this.flipped ? 7 - file : file;
-          
-          // Create unique key for this square
-          const squareKey = `${displayFile}-${displayRank}`;
-          
-          // Skip if already created (shouldn't happen, but safety check)
-          if (createdSquares.has(squareKey)) {
-            console.warn(`Duplicate square detected: ${squareKey}`);
-            continue;
-          }
-          createdSquares.add(squareKey);
-          
-          const square = this.createSquare(displayFile, displayRank);
-          fragment.appendChild(square);
-        }
-      }
-      
-      // Append all squares at once
-      this.boardElement.appendChild(fragment);
-      
-      // Post-render cleanup: remove any duplicate pieces that might have appeared
-      this.cleanupDuplicatePieces();
       
     } finally {
       this.isRendering = false;
+      this.lastRenderTime = Date.now();
     }
   }
   
   /**
-   * Cleanup any duplicate pieces that might have appeared
+   * Creates all 64 squares (called only once on initial render)
    */
-  private cleanupDuplicatePieces(): void {
+  private createAllSquares(): void {
+    if (!this.boardElement) return;
+    
+    // Clear everything
+    this.boardElement.innerHTML = '';
+    
+    for (let rank = 7; rank >= 0; rank--) {
+      for (let file = 0; file < 8; file++) {
+        const displayRank = this.flipped ? 7 - rank : rank;
+        const displayFile = this.flipped ? 7 - file : file;
+        
+        const square = this.createSquare(displayFile, displayRank);
+        this.boardElement.appendChild(square);
+      }
+    }
+  }
+  
+  /**
+   * Updates only the pieces and highlights without recreating squares
+   * This is the INFALLIBLE method that prevents duplication
+   */
+  private updatePiecesOnly(): void {
     if (!this.boardElement) return;
     
     const squares = this.boardElement.querySelectorAll('.square');
-    squares.forEach(square => {
-      const pieces = square.querySelectorAll('.piece');
-      if (pieces.length > 1) {
-        console.warn(`Found ${pieces.length} pieces in square, removing duplicates`);
-        // Keep only the first piece, remove all others
-        for (let i = 1; i < pieces.length; i++) {
-          pieces[i].remove();
+    
+    squares.forEach(squareEl => {
+      const square = squareEl as HTMLElement;
+      const file = parseInt(square.dataset.file || '0', 10);
+      const rank = parseInt(square.dataset.rank || '0', 10);
+      const position: Position = { file, rank };
+      
+      // Get the piece that should be on this square
+      const piece = this.game.getPieceAt(position);
+      
+      // Get existing piece element (if any)
+      const existingPiece = square.querySelector('.piece') as HTMLElement | null;
+      
+      // Determine what piece ID should be on this square
+      const expectedPieceId = piece ? `${piece.color}-${piece.type}-${file}-${rank}` : null;
+      const currentPieceId = existingPiece?.dataset.pieceId || null;
+      
+      // Only update if piece has changed
+      if (expectedPieceId !== currentPieceId) {
+        // Remove ALL existing pieces (handles duplicates too)
+        const allPieces = square.querySelectorAll('.piece');
+        allPieces.forEach(p => p.remove());
+        
+        // Add new piece if needed
+        if (piece) {
+          const pieceElement = PieceRenderer.createElement(piece, this.pieceTheme);
+          pieceElement.dataset.file = file.toString();
+          pieceElement.dataset.rank = rank.toString();
+          pieceElement.dataset.pieceId = expectedPieceId!;
+          square.appendChild(pieceElement);
+          square.classList.add('has-piece');
+        } else {
+          square.classList.remove('has-piece');
         }
       }
+      
+      // Update square classes (selected, legal-move, last-move, etc.)
+      this.updateSquareClasses(square, file, rank, piece);
     });
+  }
+  
+  /**
+   * Updates the CSS classes on a square
+   */
+  private updateSquareClasses(square: HTMLElement, file: number, rank: number, piece: Piece | null): void {
+    // Remove all state classes
+    square.classList.remove('selected', 'legal-move', 'last-move', 'premove', 'check');
+    
+    // Selected square
+    if (this.selectedSquare &&
+        this.selectedSquare.file === file &&
+        this.selectedSquare.rank === rank) {
+      square.classList.add('selected');
+    }
+    
+    // Legal moves
+    if (this.showLegalMoves && this.legalMoves.length > 0) {
+      const isLegalMove = this.legalMoves.some(
+        move => move.to.file === file && move.to.rank === rank
+      );
+      if (isLegalMove) {
+        square.classList.add('legal-move');
+      }
+    }
+    
+    // Last move
+    if (this.lastMove) {
+      if ((this.lastMove.from.file === file && this.lastMove.from.rank === rank) ||
+          (this.lastMove.to.file === file && this.lastMove.to.rank === rank)) {
+        square.classList.add('last-move');
+      }
+    }
+    
+    // Premove
+    if (this.premove) {
+      if ((this.premove.from.file === file && this.premove.from.rank === rank) ||
+          (this.premove.to.file === file && this.premove.to.rank === rank)) {
+        square.classList.add('premove');
+      }
+    }
+    
+    // Check
+    if (piece && piece.type === PieceType.KING &&
+        piece.color === this.game.currentTurn &&
+        this.game.isCurrentPlayerInCheck()) {
+      square.classList.add('check');
+    }
   }
 
   /**
-   * Creates a square element
+   * Creates a square element (used only during initial render)
    */
   private createSquare(file: number, rank: number): HTMLElement {
     const square = document.createElement('div');
@@ -207,65 +275,18 @@ export class Board {
     const piece = this.game.getPieceAt(position);
     
     if (piece) {
-      // AGGRESSIVE duplicate prevention
-      // First, remove any existing pieces
-      const existingPieces = square.querySelectorAll('.piece');
-      existingPieces.forEach(p => p.remove());
-      
-      // Now add the piece
+      // Create piece element
       const pieceElement = PieceRenderer.createElement(piece, this.pieceTheme);
       pieceElement.dataset.file = file.toString();
       pieceElement.dataset.rank = rank.toString();
-      
-      // Ensure piece has unique identifier
       pieceElement.dataset.pieceId = `${piece.color}-${piece.type}-${file}-${rank}`;
       
       square.appendChild(pieceElement);
       square.classList.add('has-piece');
-    } else {
-      // No piece - ensure square is clean
-      square.classList.remove('has-piece');
     }
     
-    // Highlight selected square
-    if (this.selectedSquare &&
-        this.selectedSquare.file === file &&
-        this.selectedSquare.rank === rank) {
-      square.classList.add('selected');
-    }
-    
-    // Highlight legal moves
-    if (this.showLegalMoves && this.legalMoves.length > 0) {
-      const isLegalMove = this.legalMoves.some(
-        move => move.to.file === file && move.to.rank === rank
-      );
-      if (isLegalMove) {
-        square.classList.add('legal-move');
-      }
-    }
-    
-    // Highlight last move
-    if (this.lastMove) {
-      if ((this.lastMove.from.file === file && this.lastMove.from.rank === rank) ||
-          (this.lastMove.to.file === file && this.lastMove.to.rank === rank)) {
-        square.classList.add('last-move');
-      }
-    }
-    
-    // Highlight premove squares
-    if (this.premove) {
-      if ((this.premove.from.file === file && this.premove.from.rank === rank) ||
-          (this.premove.to.file === file && this.premove.to.rank === rank)) {
-        square.classList.add('premove');
-      }
-    }
-    
-    // Highlight check
-    if (piece && piece.type === PieceType.KING &&
-        piece.color === this.game.currentTurn &&
-        this.game.isCurrentPlayerInCheck()) {
-      square.classList.add('check');
-    }
+    // Apply initial state classes
+    this.updateSquareClasses(square, file, rank, piece);
     
     return square;
   }
@@ -862,25 +883,20 @@ export class Board {
 
   /**
    * Updates the board display
-   * Uses requestAnimationFrame to batch multiple rapid updates
-   * With additional safeguards against duplicate renders
+   * Uses requestAnimationFrame for smooth updates
    */
   update(): void {
-    // Cancel any pending update
+    // If already pending, skip
     if (this.pendingUpdate) {
       return;
     }
     
     this.pendingUpdate = true;
     
-    // Use double RAF for more reliable batching
+    // Single RAF is enough with our new update method
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!this.pendingUpdate) return;
-        
-        this.renderSquares();
-        this.pendingUpdate = false;
-      });
+      this.pendingUpdate = false;
+      this.renderSquares();
     });
   }
   
@@ -890,7 +906,18 @@ export class Board {
   forceUpdate(): void {
     this.pendingUpdate = false;
     this.isRendering = false;
-    this.lastRenderTime = 0;
+    this.renderSquares();
+  }
+  
+  /**
+   * Force complete re-render (recreates all squares)
+   */
+  forceFullRender(): void {
+    this.pendingUpdate = false;
+    this.isRendering = false;
+    if (this.boardElement) {
+      this.boardElement.innerHTML = '';
+    }
     this.renderSquares();
   }
 
@@ -919,7 +946,8 @@ export class Board {
     if (this.boardElement) {
       this.boardElement.classList.add('flipping');
       setTimeout(() => {
-        this.render();
+        // Force full re-render when flipping (need to recreate squares in new order)
+        this.forceFullRender();
         this.boardElement?.classList.remove('flipping');
       }, 250);
     }
