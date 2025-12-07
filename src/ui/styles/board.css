@@ -188,12 +188,14 @@
   transform: scale(1.05);
 }
 
+/* Piece being dragged - hide it completely, ghost piece shows the visual */
 .piece.dragging {
   cursor: grabbing;
-  transform: scale(1.1);
-  z-index: calc(var(--z-pieces) + 10);
-  filter: drop-shadow(4px 8px 12px rgba(0, 0, 0, 0.6));
-  opacity: 0.3;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  /* Keep in DOM but invisible */
+  transform: scale(0) !important;
 }
 
 .piece.disabled {

@@ -568,15 +568,31 @@ export class Board {
 
   /**
    * Cleans up drag state
+   * IMPORTANT: Also removes 'dragging' class from ALL pieces to prevent ghost pieces
    */
   private cleanupDrag(): void {
+    // Remove dragging class from the specific dragged piece
     if (this.draggedPiece) {
       this.draggedPiece.classList.remove('dragging');
     }
     
+    // CRITICAL: Also remove 'dragging' class from ALL pieces on the board
+    // This handles cases where the DOM was updated during drag
+    if (this.boardElement) {
+      const allDraggingPieces = this.boardElement.querySelectorAll('.piece.dragging');
+      allDraggingPieces.forEach(piece => {
+        piece.classList.remove('dragging');
+      });
+    }
+    
+    // Remove ghost piece from DOM
     if (this.ghostPiece) {
       this.ghostPiece.remove();
     }
+    
+    // Also remove any orphaned ghost pieces that might exist
+    const orphanedGhosts = document.querySelectorAll('.piece-ghost');
+    orphanedGhosts.forEach(ghost => ghost.remove());
     
     this.draggedPiece = null;
     this.draggedFrom = null;
