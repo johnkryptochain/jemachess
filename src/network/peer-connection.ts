@@ -27,9 +27,14 @@ export type PeerConfig = PeerOptions;
 
 /**
  * PeerJS server configurations with fallbacks
+ * Using reliable public PeerJS servers
  */
 const PEER_SERVERS: PeerConfig[] = [
-  // Primary: PeerJS Cloud (0.peerjs.com)
+  // Primary: Default PeerJS Cloud (most reliable, auto-selects best server)
+  {
+    debug: 1,
+  },
+  // Fallback 1: Explicit PeerJS Cloud server
   {
     debug: 1,
     host: '0.peerjs.com',
@@ -38,17 +43,13 @@ const PEER_SERVERS: PeerConfig[] = [
     path: '/',
     key: 'peerjs',
   },
-  // Fallback 1: Alternative PeerJS server
+  // Fallback 2: Another PeerJS Cloud endpoint
   {
     debug: 1,
-    host: 'peerjs-server.herokuapp.com',
+    host: '0.peerjs.com',
     port: 443,
     secure: true,
     path: '/',
-  },
-  // Fallback 2: Default PeerJS (auto-selects server)
-  {
-    debug: 1,
   },
 ];
 
@@ -60,7 +61,7 @@ const DEFAULT_PEER_CONFIG: PeerConfig = PEER_SERVERS[0];
 /**
  * Connection timeouts and intervals
  */
-const CONNECTION_TIMEOUT = 30000; // 30 seconds
+const CONNECTION_TIMEOUT = 45000; // 45 seconds (increased for slower connections)
 const HEARTBEAT_INTERVAL = 5000; // 5 seconds
 const HEARTBEAT_TIMEOUT = 30000; // Increased from 15s to 30s for unstable connections
 const RECONNECT_BASE_DELAY = 1000; // 1 second
