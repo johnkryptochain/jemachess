@@ -476,12 +476,12 @@
     overflow: hidden !important;
   }
 
-  /* Échiquier plus petit pour laisser de la place aux panneaux */
+  /* Échiquier plus petit pour laisser de la place aux panneaux et boutons */
   .chess-board {
     width: calc(100vw - 16px) !important;
     height: calc(100vw - 16px) !important;
-    max-width: 340px !important;
-    max-height: 340px !important;
+    max-width: 320px !important;
+    max-height: 320px !important;
     flex-shrink: 0 !important;
   }
 
@@ -503,8 +503,10 @@
     order: 1 !important;
   }
 
+  /* Right panel contains player card AND game actions - split them */
   .side-panel.right {
     order: 3 !important;
+    flex-wrap: wrap !important;
   }
 
   .player-card {
@@ -526,25 +528,41 @@
     font-size: 14px !important;
   }
 
+  /* Game actions must be visible - force display */
   .game-actions {
     order: 4 !important;
-    width: 100%;
+    width: 100% !important;
     flex-direction: row !important;
-    justify-content: center;
-    gap: 6px;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 6px !important;
     padding: 6px !important;
     flex-shrink: 0 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 100 !important;
   }
 
   .game-actions-row {
     display: flex !important;
-    gap: 6px;
+    gap: 6px !important;
+    visibility: visible !important;
   }
 
   .icon-btn {
     width: 36px !important;
     height: 36px !important;
     display: flex !important;
+    visibility: visible !important;
+  }
+  
+  .glass-button.danger {
+    display: inline-flex !important;
+    visibility: visible !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
   }
   
   .board-coordinates {

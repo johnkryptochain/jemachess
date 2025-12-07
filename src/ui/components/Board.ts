@@ -36,6 +36,7 @@ export class Board {
   
   // Update batching to prevent multiple rapid updates
   private pendingUpdate: boolean = false;
+  private isRendering: boolean = false;
   
   // Event callbacks
   public onMove: ((move: Move) => void) | null = null;
@@ -93,21 +94,34 @@ export class Board {
   private renderSquares(): void {
     if (!this.boardElement) return;
     
-    // Clear all existing content to prevent duplicates
-    while (this.boardElement.firstChild) {
-      this.boardElement.removeChild(this.boardElement.firstChild);
-    }
+    // Prevent concurrent renders
+    if (this.isRendering) return;
+    this.isRendering = true;
     
-    const board = this.game.getBoard();
-    
-    for (let rank = 7; rank >= 0; rank--) {
-      for (let file = 0; file < 8; file++) {
-        const displayRank = this.flipped ? 7 - rank : rank;
-        const displayFile = this.flipped ? 7 - file : file;
-        
-        const square = this.createSquare(displayFile, displayRank);
-        this.boardElement.appendChild(square);
+    try {
+      // Clear all existing content to prevent duplicates
+      // Use innerHTML = '' for faster clearing
+      this.boardElement.innerHTML = '';
+      
+      const board = this.game.getBoard();
+      
+      // Create a document fragment for better performance
+      const fragment = document.createDocumentFragment();
+      
+      for (let rank = 7; rank >= 0; rank--) {
+        for (let file = 0; file < 8; file++) {
+          const displayRank = this.flipped ? 7 - rank : rank;
+          const displayFile = this.flipped ? 7 - file : file;
+          
+          const square = this.createSquare(displayFile, displayRank);
+          fragment.appendChild(square);
+        }
       }
+      
+      // Append all squares at once
+      this.boardElement.appendChild(fragment);
+    } finally {
+      this.isRendering = false;
     }
   }
 
@@ -146,11 +160,15 @@ export class Board {
     const piece = this.game.getPieceAt(position);
     
     if (piece) {
-      const pieceElement = PieceRenderer.createElement(piece, this.pieceTheme);
-      pieceElement.dataset.file = file.toString();
-      pieceElement.dataset.rank = rank.toString();
-      square.appendChild(pieceElement);
-      square.classList.add('has-piece');
+      // Ensure no duplicate pieces - check if square already has a piece
+      const existingPiece = square.querySelector('.piece');
+      if (!existingPiece) {
+        const pieceElement = PieceRenderer.createElement(piece, this.pieceTheme);
+        pieceElement.dataset.file = file.toString();
+        pieceElement.dataset.rank = rank.toString();
+        square.appendChild(pieceElement);
+        square.classList.add('has-piece');
+      }
     }
     
     // Highlight selected square
