@@ -40,14 +40,14 @@
   display: grid;
   grid-template-columns: minmax(180px, 250px) minmax(0, 1fr) minmax(180px, 250px);
   gap: var(--spacing-md);
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
   flex: 1;
   align-items: start;
   padding: var(--spacing-sm);
   /* Prevent overflow */
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Side Panels */
