@@ -30,7 +30,11 @@ export type PeerConfig = PeerOptions;
  * Using reliable public PeerJS servers
  */
 const PEER_SERVERS: PeerConfig[] = [
-  // Primary: Explicit PeerJS Cloud server (most reliable)
+  // Primary: Default PeerJS Cloud (auto-selects best server)
+  {
+    debug: 1,
+  },
+  // Fallback 1: Explicit PeerJS Cloud server 0
   {
     debug: 1,
     host: '0.peerjs.com',
@@ -39,9 +43,18 @@ const PEER_SERVERS: PeerConfig[] = [
     path: '/',
     key: 'peerjs',
   },
-  // Fallback: Default PeerJS Cloud (auto-selects server)
+  // Fallback 2: Scaledrone free TURN/STUN with PeerJS
   {
     debug: 1,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+      ],
+    },
   },
 ];
 
@@ -53,8 +66,9 @@ const DEFAULT_PEER_CONFIG: PeerConfig = PEER_SERVERS[0];
 /**
  * Connection timeouts and intervals
  */
-const CONNECTION_TIMEOUT = 60000; // 60 seconds total timeout
-const PER_SERVER_TIMEOUT = 25000; // 25 seconds per server attempt
+const CONNECTION_TIMEOUT = 90000; // 90 seconds total timeout
+const PER_SERVER_TIMEOUT = 20000; // 20 seconds per server attempt
+const DATA_CONNECTION_TIMEOUT = 15000; // 15 seconds for data connection after peer is open
 const HEARTBEAT_INTERVAL = 5000; // 5 seconds
 const HEARTBEAT_TIMEOUT = 30000; // Increased from 15s to 30s for unstable connections
 const RECONNECT_BASE_DELAY = 1000; // 1 second
@@ -248,43 +262,89 @@ export class PeerConnection {
    */
   private tryJoinRoom(roomId: string, serverConfig: PeerConfig): Promise<void> {
     return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error('Délai de connexion dépassé'));
+      let peerOpenTimeout: ReturnType<typeof setTimeout> | null = null;
+      let dataConnectionTimeout: ReturnType<typeof setTimeout> | null = null;
+      let resolved = false;
+      
+      const cleanup = () => {
+        if (peerOpenTimeout) clearTimeout(peerOpenTimeout);
+        if (dataConnectionTimeout) clearTimeout(dataConnectionTimeout);
+      };
+      
+      const rejectOnce = (error: Error) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        reject(error);
+      };
+      
+      const resolveOnce = () => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve();
+      };
+      
+      // Timeout for peer to open (connect to signaling server)
+      peerOpenTimeout = setTimeout(() => {
+        rejectOnce(new Error('Délai de connexion au serveur dépassé'));
         this.cleanupPeer();
-      }, PER_SERVER_TIMEOUT); // Fixed timeout per server
+      }, PER_SERVER_TIMEOUT);
       
       try {
         // Create peer with random ID
         this.peer = new Peer(serverConfig);
         
         this.peer.on('open', (id: string) => {
+          if (peerOpenTimeout) clearTimeout(peerOpenTimeout);
+          
+          console.log(`Peer opened with ID: ${id}, connecting to host: ${roomId}`);
           this.peerId = id;
           this.updateState({ peerId: id });
+          
+          // Set timeout for data connection
+          dataConnectionTimeout = setTimeout(() => {
+            console.warn('Data connection timeout - host may not be available');
+            rejectOnce(new Error('Impossible de se connecter à l\'hôte. La salle n\'existe peut-être plus.'));
+            this.cleanupPeer();
+          }, DATA_CONNECTION_TIMEOUT);
           
           // Connect to the host
           this.connection = this.peer!.connect(roomId, {
             reliable: true,
           });
           
+          // Handle connection errors
+          this.connection.on('error', (err: Error) => {
+            console.error('Data connection error:', err);
+            rejectOnce(new Error('Erreur de connexion: ' + err.message));
+          });
+          
           this.setupConnectionListeners(this.connection, () => {
-            clearTimeout(timeoutId);
+            console.log('Data connection established successfully');
             this.updateState({
               status: ConnectionStatus.CONNECTED,
               opponentId: roomId,
             });
             this.startHeartbeat();
-            resolve();
+            resolveOnce();
           });
         });
         
         this.peer.on('error', (err: Error) => {
-          clearTimeout(timeoutId);
-          reject(err);
+          console.error('Peer error:', err);
+          rejectOnce(err);
+        });
+        
+        this.peer.on('disconnected', () => {
+          console.warn('Peer disconnected from signaling server');
+          if (!resolved) {
+            rejectOnce(new Error('Déconnecté du serveur de signalisation'));
+          }
         });
         
       } catch (error) {
-        clearTimeout(timeoutId);
-        reject(error);
+        rejectOnce(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
