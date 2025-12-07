@@ -97,6 +97,7 @@ export class MoveArrows {
   private arrows: Arrow[] = [];
   private squareSize: number = 0;
   private flipped: boolean = false;
+  private boardElement: HTMLElement | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -110,6 +111,10 @@ export class MoveArrows {
    * Create the SVG element for drawing arrows
    */
   private createSVG(): void {
+    // Find the chess-board element inside the container
+    this.boardElement = this.container.querySelector('.chess-board') as HTMLElement;
+    const targetElement = this.boardElement || this.container;
+    
     this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     this.svg.setAttribute('class', 'move-arrows');
     this.svg.style.cssText = `
@@ -132,7 +137,19 @@ export class MoveArrows {
     }
     
     this.svg.appendChild(defs);
-    this.container.appendChild(this.svg);
+    
+    // Append to the chess-board element if found, otherwise to container
+    // The chess-board needs position: relative for this to work
+    if (this.boardElement) {
+      // Ensure the board has position relative
+      const computedStyle = window.getComputedStyle(this.boardElement);
+      if (computedStyle.position === 'static') {
+        this.boardElement.style.position = 'relative';
+      }
+      this.boardElement.appendChild(this.svg);
+    } else {
+      this.container.appendChild(this.svg);
+    }
     
     this.updateSquareSize();
   }
@@ -167,15 +184,33 @@ export class MoveArrows {
       this.updateSquareSize();
       this.redraw();
     });
-    observer.observe(this.container);
+    
+    // Observe the chess-board element if available, otherwise the container
+    const targetElement = this.boardElement || this.container;
+    observer.observe(targetElement);
+    
+    // Also observe the container for fullscreen changes
+    if (this.boardElement && this.boardElement !== this.container) {
+      observer.observe(this.container);
+    }
   }
 
   /**
-   * Update the square size based on container dimensions
+   * Update the square size based on board dimensions
    */
   private updateSquareSize(): void {
-    const rect = this.container.getBoundingClientRect();
+    // Use the chess-board element dimensions if available
+    const targetElement = this.boardElement || this.container;
+    const rect = targetElement.getBoundingClientRect();
     this.squareSize = Math.min(rect.width, rect.height) / 8;
+    
+    // Update SVG viewBox to match the board size
+    if (this.svg && rect.width > 0 && rect.height > 0) {
+      const size = Math.min(rect.width, rect.height);
+      this.svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+      this.svg.style.width = `${size}px`;
+      this.svg.style.height = `${size}px`;
+    }
   }
 
   /**
@@ -377,5 +412,6 @@ export class MoveArrows {
       this.svg = null;
     }
     this.arrows = [];
+    this.boardElement = null;
   }
 }

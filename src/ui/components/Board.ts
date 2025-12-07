@@ -565,7 +565,24 @@ export class Board {
     
     // In online games, only allow selecting your own color
     // playerColor is set for online games, null for local games
-    const isPlayersPiece = piece && (this.playerColor === null || piece.color === this.playerColor);
+    // When playerColor is null (local/coach mode), only current turn's pieces are "player's pieces"
+    const isPlayersPiece = piece && (
+      this.playerColor === null
+        ? piece.color === this.game.currentTurn  // In local/coach mode, can only select current turn's pieces
+        : piece.color === this.playerColor       // In online mode, can only select your color
+    );
+    
+    // If a piece is selected and clicking on a legal move target (including captures)
+    // This must be checked FIRST to allow capturing enemy pieces
+    if (this.selectedSquare && this.legalMoves.length > 0) {
+      const isLegalTarget = this.legalMoves.some(
+        move => move.to.file === position.file && move.to.rank === position.rank
+      );
+      if (isLegalTarget) {
+        this.tryMove(this.selectedSquare, position);
+        return;
+      }
+    }
     
     // If clicking on own piece and it's your turn, select it
     if (piece && isPlayersPiece && isCurrentTurn) {
@@ -575,8 +592,9 @@ export class Board {
       return;
     }
     
-    // If clicking on player's piece but not their turn (premove)
-    if (piece && this.premoveEnabled && isPlayersPiece && !isCurrentTurn) {
+    // If clicking on player's piece but not their turn (premove) - only in online mode
+    if (piece && this.premoveEnabled && this.playerColor !== null &&
+        piece.color === this.playerColor && !isCurrentTurn) {
       this.selectedSquare = position;
       // For premoves, we show all pseudo-legal moves (simplified - just show where piece could go)
       this.legalMoves = this.getPremoveMoves(position);
@@ -584,9 +602,11 @@ export class Board {
       return;
     }
     
-    // If a piece is selected and clicking on a legal move target
-    if (this.selectedSquare && this.legalMoves.length > 0) {
-      this.tryMove(this.selectedSquare, position);
+    // If clicking on own piece (to change selection)
+    if (piece && isPlayersPiece) {
+      this.selectedSquare = position;
+      this.legalMoves = this.game.getLegalMoves(position);
+      this.update();
       return;
     }
     

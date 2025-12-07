@@ -197,6 +197,22 @@ const DEFAULT_STATE: AppState = {
  * All state changes go through this store, and listeners are
  * notified of any changes.
  */
+/**
+ * Online session data for persistence
+ */
+export interface OnlineSession {
+  roomId: string;
+  isHost: boolean;
+  playerName: string;
+  opponentName: string;
+  playerColor: PieceColor;
+  gameFen: string;
+  moveHistory: string[]; // Simplified move notation
+  whiteTime: number;
+  blackTime: number;
+  timestamp: number;
+}
+
 export class Store {
   private state: AppState;
   private listeners: Set<StateListener> = new Set();
@@ -208,6 +224,9 @@ export class Store {
     'confirmMoves',
     'gameStats',
   ];
+  
+  private static ONLINE_SESSION_KEY = 'jemachess-online-session';
+  private static SESSION_EXPIRY = 30 * 60 * 1000; // 30 minutes
 
   constructor(initialState?: Partial<AppState>) {
     this.state = { ...DEFAULT_STATE, ...initialState };
@@ -860,7 +879,85 @@ export class Store {
     const gameStats = this.state.gameStats;
     this.state = { ...DEFAULT_STATE, gameStats };
     this.loadSettings(); // Preserve user settings
+    // Clear online session when resetting
+    this.clearOnlineSession();
     this.notifyListeners();
+  }
+  
+  // ============================================
+  // Online Session Persistence
+  // ============================================
+  
+  /**
+   * Save online session to localStorage
+   */
+  saveOnlineSession(isHost: boolean, playerName: string): void {
+    const { game, roomCode, playerColor, players, whiteTime, blackTime } = this.state;
+    if (!game || !roomCode) return;
+    
+    try {
+      const session: OnlineSession = {
+        roomId: roomCode,
+        isHost,
+        playerName,
+        opponentName: isHost ? players.black : players.white,
+        playerColor,
+        gameFen: game.toFEN(),
+        moveHistory: game.moveHistory.map(m => `${m.from.file}${m.from.rank}-${m.to.file}${m.to.rank}`),
+        whiteTime,
+        blackTime,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(Store.ONLINE_SESSION_KEY, JSON.stringify(session));
+      console.log('Online session saved:', session.roomId);
+    } catch (error) {
+      console.warn('Failed to save online session:', error);
+    }
+  }
+  
+  /**
+   * Load online session from localStorage
+   * @returns The session if valid, null otherwise
+   */
+  loadOnlineSession(): OnlineSession | null {
+    try {
+      const stored = localStorage.getItem(Store.ONLINE_SESSION_KEY);
+      if (!stored) return null;
+      
+      const session: OnlineSession = JSON.parse(stored);
+      
+      // Check if session is expired
+      if (Date.now() - session.timestamp > Store.SESSION_EXPIRY) {
+        console.log('Online session expired, clearing...');
+        this.clearOnlineSession();
+        return null;
+      }
+      
+      console.log('Online session loaded:', session.roomId);
+      return session;
+    } catch (error) {
+      console.warn('Failed to load online session:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Clear online session from localStorage
+   */
+  clearOnlineSession(): void {
+    try {
+      localStorage.removeItem(Store.ONLINE_SESSION_KEY);
+      console.log('Online session cleared');
+    } catch (error) {
+      console.warn('Failed to clear online session:', error);
+    }
+  }
+  
+  /**
+   * Check if there's a valid online session to restore
+   */
+  hasOnlineSession(): boolean {
+    return this.loadOnlineSession() !== null;
   }
   
   /**

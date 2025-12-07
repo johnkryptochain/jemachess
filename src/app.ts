@@ -130,10 +130,297 @@ export class App {
     // Set up keyboard shortcuts
     this.setupKeyboardShortcuts();
     
-    // Show initial screen (landing page)
-    this.showScreen('landing');
+    // Check for online session to restore
+    const hasSession = await this.checkAndRestoreOnlineSession();
+    
+    if (!hasSession) {
+      // Show initial screen (landing page)
+      this.showScreen('landing');
+    }
     
     console.log('JemaChess initialized successfully');
+  }
+  
+  /**
+   * Check for and restore an online session
+   * @returns true if a session was restored
+   */
+  private async checkAndRestoreOnlineSession(): Promise<boolean> {
+    const session = store.loadOnlineSession();
+    if (!session) return false;
+    
+    // Show reconnection dialog
+    return new Promise((resolve) => {
+      this.showReconnectDialog(session, (shouldReconnect) => {
+        if (shouldReconnect) {
+          this.restoreOnlineSession(session);
+          resolve(true);
+        } else {
+          store.clearOnlineSession();
+          resolve(false);
+        }
+      });
+    });
+  }
+  
+  /**
+   * Show reconnection dialog
+   */
+  private showReconnectDialog(session: any, callback: (shouldReconnect: boolean) => void): void {
+    const modal = document.createElement('div');
+    modal.className = 'reconnect-modal';
+    modal.innerHTML = `
+      <div class="reconnect-modal-content">
+        <h3>🔄 Partie en cours</h3>
+        <p>Une partie en ligne a été interrompue.</p>
+        <div class="session-info">
+          <div class="info-row">
+            <span class="label">Adversaire:</span>
+            <span class="value">${session.opponentName || 'Adversaire'}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Vous jouez:</span>
+            <span class="value">${session.playerColor === PieceColor.WHITE ? 'Blancs' : 'Noirs'}</span>
+          </div>
+        </div>
+        <p class="reconnect-question">Voulez-vous vous reconnecter ?</p>
+        <div class="reconnect-buttons">
+          <button class="reconnect-btn yes">Reconnecter</button>
+          <button class="reconnect-btn no">Nouvelle partie</button>
+        </div>
+      </div>
+    `;
+    
+    // Add styles
+    this.addReconnectModalStyles();
+    
+    // Handle button clicks
+    const yesBtn = modal.querySelector('.reconnect-btn.yes');
+    const noBtn = modal.querySelector('.reconnect-btn.no');
+    
+    yesBtn?.addEventListener('click', () => {
+      modal.remove();
+      callback(true);
+    });
+    
+    noBtn?.addEventListener('click', () => {
+      modal.remove();
+      callback(false);
+    });
+    
+    document.body.appendChild(modal);
+  }
+  
+  /**
+   * Add styles for reconnect modal
+   */
+  private addReconnectModalStyles(): void {
+    const styleId = 'reconnect-modal-styles';
+    if (document.getElementById(styleId)) return;
+    
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .reconnect-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+      
+      .reconnect-modal-content {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+      }
+      
+      .reconnect-modal h3 {
+        margin: 0 0 16px 0;
+        color: #fff;
+        font-size: 1.5rem;
+      }
+      
+      .reconnect-modal p {
+        color: #aaa;
+        margin: 0 0 16px 0;
+      }
+      
+      .session-info {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 16px;
+        margin: 16px 0;
+      }
+      
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0;
+      }
+      
+      .info-row .label {
+        color: #888;
+      }
+      
+      .info-row .value {
+        color: #fff;
+        font-weight: 500;
+      }
+      
+      .reconnect-question {
+        color: #fff !important;
+        font-weight: 500;
+      }
+      
+      .reconnect-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+      
+      .reconnect-btn {
+        flex: 1;
+        padding: 14px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .reconnect-btn.yes {
+        background: linear-gradient(135deg, #7d82ea 0%, #5356a8 100%);
+        color: #fff;
+      }
+      
+      .reconnect-btn.yes:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(125, 130, 234, 0.4);
+      }
+      
+      .reconnect-btn.no {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      
+      .reconnect-btn.no:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  /**
+   * Restore an online session
+   */
+  private async restoreOnlineSession(session: any): Promise<void> {
+    Toast.info('Reconnexion en cours...');
+    
+    try {
+      // Initialize peer connection
+      if (!this.peerConnection) {
+        this.peerConnection = new PeerConnection();
+      }
+      
+      // Set up connection handlers
+      this.setupPeerConnectionHandlers(session.isHost, session.playerName);
+      
+      if (session.isHost) {
+        // Host: recreate the room with the same ID
+        // Note: PeerJS doesn't allow specifying peer ID, so we create a new room
+        // and the guest won't be able to reconnect to the same room
+        // For now, we'll just start fresh but keep the game state
+        Toast.warning('Reconnexion impossible - Nouvelle salle créée');
+        const roomId = await this.peerConnection.createRoom();
+        store.setRoomCode(roomId);
+        store.setConnectionState({ status: ConnectionStatus.CONNECTED });
+        
+        // Show lobby with new room code
+        this.showScreen('lobby');
+        if (this.lobby) {
+          this.lobby.setRoomCode(roomId);
+        }
+      } else {
+        // Guest: try to reconnect to the host
+        await this.peerConnection.joinRoom(session.roomId);
+        store.setRoomCode(session.roomId);
+        store.setConnectionState({ status: ConnectionStatus.CONNECTED });
+        
+        // Restore game state and start
+        this.restoreGameFromSession(session);
+      }
+      
+      this.peerConnection.enableReconnect();
+      
+    } catch (error) {
+      console.error('Failed to restore session:', error);
+      Toast.error('Reconnexion échouée');
+      store.clearOnlineSession();
+      this.showScreen('landing');
+    }
+  }
+  
+  /**
+   * Restore game state from session
+   */
+  private restoreGameFromSession(session: any): void {
+    // Start online game with restored state
+    store.startNewGame('online', {
+      initial: session.whiteTime,
+      increment: 0,
+    });
+    
+    // Set player color
+    store.setPlayerColor(session.playerColor);
+    store.setPlayers(
+      session.playerColor === PieceColor.WHITE ? session.playerName : session.opponentName,
+      session.playerColor === PieceColor.BLACK ? session.playerName : session.opponentName
+    );
+    
+    // Restore timer values
+    store.updateTimers(session.whiteTime, session.blackTime);
+    
+    // Initialize timer with TIME_CONTROLS format
+    this.initializeTimer(TIME_CONTROLS.RAPID_10_0);
+    
+    // Set up game sync
+    this.setupGameSync();
+    
+    // Play game start sound
+    this.soundManager.play('gameStart');
+    
+    // Show game screen
+    this.showScreen('game');
+    
+    // Configure board
+    if (this.gameScreen) {
+      const board = this.gameScreen.getBoard();
+      if (board) {
+        board.setPlayerColor(session.playerColor);
+        if (session.playerColor === PieceColor.BLACK) {
+          board.setFlipped(true);
+        }
+      }
+    }
+    
+    // Initialize game chat
+    this.initializeGameChat(session.isHost);
+    
+    // Start timer
+    this.timer?.start(PieceColor.WHITE);
+    store.startTimer();
+    
+    Toast.success('Partie restaurée !');
   }
 
   /**
@@ -1011,8 +1298,9 @@ export class App {
   /**
    * Start an online game
    * @param isHost Whether this player is the host
+   * @param playerName Optional player name for session saving
    */
-  private startOnlineGame(isHost: boolean = false): void {
+  private startOnlineGame(isHost: boolean = false, playerName?: string): void {
     // Start new game in store
     store.startNewGame('online', {
       initial: TIME_CONTROLS.RAPID_10_0.initialTime,
@@ -1050,6 +1338,11 @@ export class App {
     
     // Initialize game chat for P2P communication
     this.initializeGameChat(isHost);
+    
+    // Save online session for reconnection on refresh
+    const state = store.getState();
+    const name = playerName || (isHost ? state.players.white : state.players.black) || 'Joueur';
+    store.saveOnlineSession(isHost, name);
     
     // Start the timer
     this.timer?.start(PieceColor.WHITE);
@@ -1198,6 +1491,9 @@ export class App {
       this.timer.stop();
     }
     store.stopTimer();
+    
+    // Clear online session when game ends
+    store.clearOnlineSession();
     
     // Play game end sound
     this.soundManager.play('gameEnd');
@@ -1441,7 +1737,7 @@ export class App {
       // Start the game as guest (plays black)
       // Note: setupGameSync() is called inside startOnlineGame()
       setTimeout(() => {
-        this.startOnlineGame(false); // false = guest
+        this.startOnlineGame(false, playerName); // false = guest
       }, 500);
       
     } catch (error) {
@@ -1469,7 +1765,7 @@ export class App {
         store.setPlayers(playerName, 'Adversaire');
         Toast.info('Démarrage de la partie...');
         setTimeout(() => {
-          this.startOnlineGame(true); // true = host
+          this.startOnlineGame(true, playerName); // true = host
         }, 500);
       }
     };

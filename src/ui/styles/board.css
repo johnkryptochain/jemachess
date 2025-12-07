@@ -8,13 +8,14 @@
 
 /* Chess Board */
 .chess-board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   width: min(80vmin, 560px);
   height: min(80vmin, 560px);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible; /* Allow arrows to be visible */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.3);
