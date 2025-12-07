@@ -61,13 +61,9 @@ export class PieceRenderer {
     const url = this.getImageUrl(piece, theme);
     const cacheKey = url;
     
-    // DEBUG: Log the URL being used
-    console.log('[PieceRenderer] Creating piece element with URL:', url);
-    
     // Check if we have a cached image
     const cachedImage = imageCache.get(cacheKey);
     if (cachedImage) {
-      console.log('[PieceRenderer] Using cached image for:', url);
       const img = cachedImage.cloneNode(true) as HTMLImageElement;
       img.className = 'piece';
       img.draggable = false;
@@ -80,10 +76,6 @@ export class PieceRenderer {
     img.className = 'piece';
     img.alt = `${piece.color === PieceColor.WHITE ? 'White' : 'Black'} ${pieceTypeMap[piece.type]}`;
     img.draggable = false;
-    
-    // DEBUG: Add load/error handlers
-    img.onload = () => console.log('[PieceRenderer] Image loaded successfully:', url);
-    img.onerror = (e) => console.error('[PieceRenderer] Image failed to load:', url, e);
     
     // Add data attributes for piece info
     img.dataset.pieceType = piece.type;

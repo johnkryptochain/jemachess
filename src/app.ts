@@ -1362,6 +1362,9 @@ export class App {
       store.setRoomCode(roomCode);
       store.setConnectionState({ status: ConnectionStatus.CONNECTED });
       
+      // Enable reconnection for stable online play
+      this.peerConnection.enableReconnect();
+      
       Toast.success(`Salle créée ! Code: ${roomCode.substring(0, 8)}...`);
       
       // Update lobby UI
@@ -1405,6 +1408,9 @@ export class App {
       
       store.setRoomCode(code);
       store.setConnectionState({ status: ConnectionStatus.CONNECTED });
+      
+      // Enable reconnection for stable online play
+      this.peerConnection.enableReconnect();
       
       Toast.success('Connexion réussie !');
       

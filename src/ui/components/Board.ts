@@ -34,6 +34,9 @@ export class Board {
   private premove: { from: Position; to: Position; promotion?: PieceType } | null = null;
   private playerColor: PieceColor | null = null; // The color the player is playing as
   
+  // Update batching to prevent multiple rapid updates
+  private pendingUpdate: boolean = false;
+  
   // Event callbacks
   public onMove: ((move: Move) => void) | null = null;
   public onSquareClick: ((position: Position) => void) | null = null;
@@ -761,9 +764,15 @@ export class Board {
 
   /**
    * Updates the board display
+   * Uses requestAnimationFrame to batch multiple rapid updates
    */
   update(): void {
-    this.renderSquares();
+    if (this.pendingUpdate) return;
+    this.pendingUpdate = true;
+    requestAnimationFrame(() => {
+      this.renderSquares();
+      this.pendingUpdate = false;
+    });
   }
 
   /**

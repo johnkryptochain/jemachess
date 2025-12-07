@@ -37,7 +37,7 @@ const DEFAULT_PEER_CONFIG: PeerConfig = {
  */
 const CONNECTION_TIMEOUT = 30000; // 30 seconds
 const HEARTBEAT_INTERVAL = 5000; // 5 seconds
-const HEARTBEAT_TIMEOUT = 15000; // 15 seconds
+const HEARTBEAT_TIMEOUT = 30000; // Increased from 15s to 30s for unstable connections
 const RECONNECT_BASE_DELAY = 1000; // 1 second
 const RECONNECT_MAX_DELAY = 30000; // 30 seconds
 const MAX_RECONNECT_ATTEMPTS = 5;
