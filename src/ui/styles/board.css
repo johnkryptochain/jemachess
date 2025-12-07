@@ -12,13 +12,17 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: min(80vmin, 560px);
-  height: min(80vmin, 560px);
+  /* Responsive sizing - fits within container */
+  width: min(80vmin, 560px, calc(100vw - 500px));
+  height: min(80vmin, 560px, calc(100vw - 500px));
   border-radius: var(--radius-lg);
   overflow: visible; /* Allow arrows to be visible */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.3);
+  /* Ensure board stays square */
+  aspect-ratio: 1 / 1;
+  max-width: 100%;
 }
 
 /* Board with coordinates wrapper */
@@ -350,6 +354,24 @@
 }
 
 /* Responsive board sizing */
+
+/* Laptops 13-14 inch (typically 1366x768 to 1536x864) */
+@media (min-width: 1200px) and (max-width: 1600px) {
+  .chess-board {
+    /* Constrain board size on smaller laptops */
+    width: min(65vh, 500px, calc(100vw - 450px));
+    height: min(65vh, 500px, calc(100vw - 450px));
+  }
+}
+
+/* Large laptops and desktops */
+@media (min-width: 1600px) {
+  .chess-board {
+    width: min(75vmin, 600px);
+    height: min(75vmin, 600px);
+  }
+}
+
 @media (max-width: 768px) {
   .chess-board {
     width: min(90vmin, 480px);
@@ -484,11 +506,12 @@
   display: none !important;
 }
 
-/* Fullscreen exit button */
+/* Fullscreen exit button - positioned at bottom center to avoid covering pieces */
 .fullscreen-exit-btn {
   position: fixed;
-  top: env(safe-area-inset-top, 16px);
-  right: env(safe-area-inset-right, 16px);
+  bottom: env(safe-area-inset-bottom, 16px);
+  left: 50%;
+  transform: translateX(-50%);
   width: 48px;
   height: 48px;
   background: rgba(20, 20, 30, 0.9);
@@ -504,17 +527,16 @@
   justify-content: center;
   transition: all 0.2s;
   padding: 0;
-  margin: 16px;
+  margin-bottom: 16px;
 }
 
 .fullscreen-exit-btn:hover {
   background: rgba(125, 130, 234, 0.3);
   border-color: #7d82ea;
-  transform: scale(1.05);
 }
 
 .fullscreen-exit-btn:active {
-  transform: scale(0.95);
+  transform: translateX(-50%) scale(0.95);
 }
 
 .fullscreen-exit-btn svg {
@@ -581,11 +603,41 @@
   }
 }
 
-/* Foldable devices - unfolded (close to square) */
+/* Foldable devices - unfolded (close to square aspect ratio like Honor Magic V3) */
 @media (min-aspect-ratio: 3/4) and (max-aspect-ratio: 4/3) {
+  .game-container.fullscreen-mode {
+    /* Ensure full coverage on square-ish screens */
+    padding: 0 !important;
+  }
+  
+  .game-container.fullscreen-mode .board-container {
+    /* Center the board with space for exit button at bottom */
+    padding-bottom: 70px;
+  }
+  
   .game-container.fullscreen-mode .chess-board {
-    width: min(100vw, 100vh) !important;
-    height: min(100vw, 100vh) !important;
+    /* Use available space minus button area */
+    width: min(100vw, calc(100vh - 70px), calc(100dvh - 70px)) !important;
+    height: min(100vw, calc(100vh - 70px), calc(100dvh - 70px)) !important;
+  }
+  
+  .fullscreen-exit-btn {
+    /* Ensure button is visible below the board */
+    bottom: env(safe-area-inset-bottom, 8px);
+    margin-bottom: 8px;
+  }
+}
+
+/* Very square screens (foldables like Honor Magic V3 unfolded ~1:1.07) */
+@media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 10/9) {
+  .game-container.fullscreen-mode .board-container {
+    padding-bottom: 80px;
+  }
+  
+  .game-container.fullscreen-mode .chess-board {
+    /* Leave room for exit button */
+    width: min(100vw, calc(100vh - 80px), calc(100dvh - 80px)) !important;
+    height: min(100vw, calc(100vh - 80px), calc(100dvh - 80px)) !important;
   }
 }
 
@@ -594,7 +646,7 @@
   .fullscreen-exit-btn {
     width: 40px;
     height: 40px;
-    margin: 8px;
+    margin-bottom: 8px;
   }
   
   .fullscreen-exit-btn svg {
@@ -603,11 +655,48 @@
   }
 }
 
-/* Notch/Dynamic Island safe areas */
-@supports (padding: env(safe-area-inset-top)) {
+/* Notch/Dynamic Island safe areas - bottom positioning */
+@supports (padding: env(safe-area-inset-bottom)) {
   .fullscreen-exit-btn {
-    top: calc(env(safe-area-inset-top, 0px) + 8px);
-    right: calc(env(safe-area-inset-right, 0px) + 8px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  }
+}
+
+/* Landscape mode - put button on the side instead of bottom */
+@media (orientation: landscape) and (min-aspect-ratio: 4/3) {
+  .fullscreen-exit-btn {
+    bottom: auto;
+    top: 50%;
+    left: auto;
+    right: env(safe-area-inset-right, 8px);
+    transform: translateY(-50%);
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+  
+  .fullscreen-exit-btn:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+  
+  .game-container.fullscreen-mode .board-container {
+    padding-bottom: 0;
+    padding-right: 70px;
+  }
+  
+  .game-container.fullscreen-mode .chess-board {
+    width: min(calc(100vw - 70px), 100vh, 100dvh) !important;
+    height: min(calc(100vw - 70px), 100vh, 100dvh) !important;
+  }
+}
+
+/* Ultra-wide landscape - button on right side */
+@media (orientation: landscape) and (min-aspect-ratio: 2/1) {
+  .fullscreen-exit-btn {
+    right: calc(env(safe-area-inset-right, 0px) + 16px);
+  }
+  
+  .game-container.fullscreen-mode .board-container {
+    padding-right: 80px;
   }
 }
 

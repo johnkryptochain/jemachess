@@ -38,7 +38,7 @@
 /* Game Layout */
 .game-container {
   display: grid;
-  grid-template-columns: minmax(180px, 250px) auto minmax(180px, 250px);
+  grid-template-columns: minmax(180px, 250px) minmax(0, 1fr) minmax(180px, 250px);
   gap: var(--spacing-md);
   max-width: 1200px;
   margin: 0 auto;
@@ -46,6 +46,8 @@
   flex: 1;
   align-items: start;
   padding: var(--spacing-sm);
+  /* Prevent overflow */
+  overflow: hidden;
 }
 
 /* Side Panels */
@@ -357,7 +359,22 @@
   flex: 1;
 }
 
-/* Responsive */
+/* Responsive - Laptops and smaller desktops */
+@media (max-width: 1400px) {
+  .game-container {
+    grid-template-columns: minmax(150px, 200px) minmax(0, 1fr) minmax(150px, 200px);
+    gap: var(--spacing-sm);
+    max-width: 100%;
+    padding: var(--spacing-xs);
+  }
+  
+  .player-card {
+    min-width: 150px;
+    max-width: 200px;
+  }
+}
+
+/* Tablets and small laptops */
 @media (max-width: 1200px) {
   .game-container {
     grid-template-columns: 1fr;
