@@ -1160,11 +1160,7 @@ export class App {
       const hintBtn = document.createElement('button');
       hintBtn.className = 'glass-button hint-btn';
       hintBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
+        <span class="hint-icon-inline">?</span>
         <span class="hint-text">Indice</span>
         <span class="hint-key">(H)</span>
       `;
@@ -1190,11 +1186,7 @@ export class App {
     mobileHintBtn.id = 'mobile-hint-btn';
     mobileHintBtn.className = 'mobile-hint-btn';
     mobileHintBtn.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-        <line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
+      <span class="hint-icon">?</span>
     `;
     mobileHintBtn.title = 'Indice';
     mobileHintBtn.addEventListener('click', () => this.showHint());
@@ -1243,9 +1235,10 @@ export class App {
         transform: scale(0.95);
       }
       
-      .mobile-hint-btn svg {
-        width: 28px;
-        height: 28px;
+      .mobile-hint-btn .hint-icon {
+        font-size: 28px;
+        font-weight: bold;
+        line-height: 1;
       }
       
       /* Show on touch devices and small screens */
@@ -1264,6 +1257,7 @@ export class App {
         
         .hint-btn {
           padding: 8px 12px;
+          min-width: 40px;
         }
       }
       
@@ -1284,6 +1278,18 @@ export class App {
       .hint-key {
         opacity: 0.7;
         font-size: 0.85em;
+      }
+      
+      .hint-icon-inline {
+        font-size: 18px;
+        font-weight: bold;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
       }
     `;
     document.head.appendChild(style);

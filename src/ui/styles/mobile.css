@@ -124,17 +124,34 @@
   }
 
   .game-actions-row {
+    display: flex !important;
     margin-bottom: 0 !important;
+    gap: 8px;
   }
 
   .icon-btn {
     width: 40px !important;
     height: 40px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
   }
 
   .icon-btn svg {
     width: 18px !important;
     height: 18px !important;
+  }
+  
+  /* Ensure pieces don't duplicate */
+  .piece {
+    position: relative;
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
+  
+  .piece img {
+    max-width: 100%;
+    max-height: 100%;
   }
 
   .glass-button.small {
@@ -425,19 +442,34 @@
 /* Foldable phones - Honor Magic V3, Samsung Fold (480px - 768px) */
 @media (min-width: 481px) and (max-width: 768px) {
   .game-container {
+    display: flex !important;
+    flex-direction: column !important;
     gap: 12px !important;
+    padding: 12px !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .chess-board {
-    width: min(85vw, 85vmin) !important;
-    height: min(85vw, 85vmin) !important;
-    max-width: 520px;
-    max-height: 520px;
+    width: min(75vw, 75vh, 500px) !important;
+    height: min(75vw, 75vh, 500px) !important;
+    max-width: 500px;
+    max-height: 500px;
+  }
+
+  .side-panel {
+    width: 100%;
+    flex-direction: row !important;
+    justify-content: center;
+    gap: 16px;
   }
 
   .player-card {
     padding: 10px 14px !important;
-    max-width: 220px;
+    max-width: 200px;
+    flex: 0 1 auto;
   }
 
   .player-avatar {
@@ -449,27 +481,44 @@
     font-size: 20px !important;
   }
 
+  .game-actions {
+    width: 100%;
+    flex-direction: row !important;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .game-actions-row {
+    display: flex !important;
+    gap: 12px;
+  }
+
   .icon-btn {
     width: 44px !important;
     height: 44px !important;
+    display: flex !important;
   }
 }
 
 /* Large foldable phones unfolded - Honor Magic V3, Samsung Fold unfolded (769px - 1200px) */
 @media (min-width: 769px) and (max-width: 1200px) {
   .game-container {
-    display: grid !important;
-    grid-template-columns: minmax(150px, 220px) auto minmax(150px, 220px) !important;
-    gap: 20px !important;
-    padding: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 16px !important;
     max-width: 100% !important;
-    align-items: start !important;
-    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .side-panel {
-    flex-direction: column !important;
+    flex-direction: row !important;
     width: 100% !important;
+    justify-content: center;
+    gap: 20px;
   }
 
   .side-panel.left {
@@ -485,41 +534,46 @@
   }
 
   .chess-board {
-    width: min(65vmin, 600px) !important;
-    height: min(65vmin, 600px) !important;
+    width: min(60vw, 60vh, 550px) !important;
+    height: min(60vw, 60vh, 550px) !important;
   }
 
   .player-card {
-    padding: 14px 18px !important;
-    max-width: 100% !important;
-    width: 100% !important;
+    padding: 12px 16px !important;
+    max-width: 220px !important;
     flex-direction: row !important;
   }
 
   .player-avatar {
-    width: 48px !important;
-    height: 48px !important;
+    width: 44px !important;
+    height: 44px !important;
   }
 
   .player-timer {
-    font-size: 24px !important;
+    font-size: 22px !important;
   }
 
   .game-actions {
-    flex-direction: column !important;
-    width: 100% !important;
-    padding: 16px !important;
+    flex-direction: row !important;
+    width: auto !important;
+    padding: 12px !important;
+    gap: 12px;
+  }
+
+  .game-actions-row {
+    display: flex !important;
+    gap: 12px;
   }
 
   .icon-btn {
-    width: 50px !important;
-    height: 50px !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: flex !important;
   }
 
-  /* Move history visible on larger screens */
+  /* Move history hidden on foldables to save space */
   .move-history {
-    display: block !important;
-    max-height: 250px;
+    display: none !important;
   }
 }
 
