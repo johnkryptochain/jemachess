@@ -41,6 +41,8 @@ import {
   GameStatus,
   ConnectionStatus,
   MoveType,
+  Position,
+  PieceType,
 } from './types';
 
 /**
@@ -1022,6 +1024,9 @@ export class App {
     // Initialize timer
     this.initializeTimer(TIME_CONTROLS.RAPID_10_0);
     
+    // Set up game synchronization BEFORE showing game screen
+    this.setupGameSync();
+    
     // Play game start sound
     this.soundManager.play('gameStart');
     
@@ -1129,8 +1134,15 @@ export class App {
     }
     
     // Send move to opponent if online
-    if (gameMode === 'online' && this.gameSync) {
-      // GameSync handles move synchronization
+    if (gameMode === 'online' && this.gameSync && newState.game) {
+      const networkMove = {
+        from: move.from,
+        to: move.to,
+        promotion: move.promotion,
+      };
+      const newFen = newState.game.toFEN();
+      console.log('Sending move to opponent:', networkMove, 'FEN:', newFen);
+      this.gameSync.sendMove(networkMove, newFen);
     }
     
     // Check for game over
@@ -1414,10 +1426,8 @@ export class App {
       
       Toast.success('Connexion réussie !');
       
-      // Set up game sync
-      this.setupGameSync();
-      
       // Start the game as guest (plays black)
+      // Note: setupGameSync() is called inside startOnlineGame()
       setTimeout(() => {
         this.startOnlineGame(false); // false = guest
       }, 500);
@@ -1503,8 +1513,145 @@ export class App {
   private setupGameSync(): void {
     if (!this.peerConnection) return;
     
-    // GameSync would be initialized here with the peer connection
-    // For now, we'll handle basic message passing
+    // Create GameSync instance
+    this.gameSync = new GameSync(this.peerConnection);
+    
+    // Get current game state
+    const state = store.getState();
+    const playerColor = state.playerColor || PieceColor.WHITE;
+    const initialFen = state.game?.toFEN() || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+    
+    // Initialize GameSync with player color and initial position
+    this.gameSync.initialize(playerColor, initialFen);
+    
+    // Set up callbacks for receiving moves from opponent
+    this.gameSync.onMoveReceived = (move, moveNumber) => {
+      console.log('Received move from opponent:', move, 'moveNumber:', moveNumber);
+      this.handleRemoteMove(move);
+    };
+    
+    this.gameSync.onMoveAcknowledged = (moveNumber) => {
+      console.log('Move acknowledged:', moveNumber);
+    };
+    
+    this.gameSync.onMoveRejected = (moveNumber, reason) => {
+      console.error('Move rejected:', moveNumber, reason);
+      Toast.error('Coup rejeté par l\'adversaire');
+    };
+    
+    this.gameSync.onResign = (resigningColor) => {
+      console.log('Opponent resigned:', resigningColor);
+      const state = store.getState();
+      if (state.game) {
+        store.resign();
+        this.handleGameOver();
+      }
+    };
+    
+    this.gameSync.onDrawOffer = (offeringColor) => {
+      console.log('Draw offered by:', offeringColor);
+      Toast.info('L\'adversaire propose une nulle');
+      store.setState({ drawOffered: true, drawOfferFrom: offeringColor });
+    };
+    
+    this.gameSync.onDrawAccepted = () => {
+      console.log('Draw accepted');
+      store.acceptDraw();
+      this.handleGameOver();
+    };
+    
+    this.gameSync.onDrawDeclined = () => {
+      console.log('Draw declined');
+      Toast.info('Nulle refusée');
+      store.declineDraw();
+    };
+    
+    this.gameSync.onStateSync = (fen, moveHistory, moveNumber) => {
+      console.log('State sync received:', fen, moveNumber);
+      // Handle state synchronization if needed
+    };
+    
+    this.gameSync.onError = (error) => {
+      console.error('GameSync error:', error);
+      Toast.error('Erreur de synchronisation');
+    };
+    
+    console.log('GameSync initialized for', playerColor === PieceColor.WHITE ? 'White' : 'Black');
+  }
+
+  /**
+   * Handle a move received from the remote opponent
+   */
+  private handleRemoteMove(move: { from: Position; to: Position; promotion?: PieceType }): void {
+    const state = store.getState();
+    if (!state.game) {
+      console.error('Cannot apply remote move: no game');
+      return;
+    }
+    
+    // Get the piece at the source position
+    const piece = state.game.getPieceAt(move.from);
+    if (!piece) {
+      console.error('No piece at source position:', move.from);
+      this.gameSync?.requestStateSync();
+      return;
+    }
+    
+    // Create a partial move - the game.makeMove will fill in the details
+    const partialMove = {
+      from: move.from,
+      to: move.to,
+      piece: piece,
+      promotion: move.promotion,
+    };
+    
+    // Make the move on the game - it will determine moveType, isCheck, etc.
+    const success = state.game.makeMove(partialMove as Move);
+    if (!success) {
+      console.error('Failed to apply remote move:', move);
+      // Request state sync to recover
+      this.gameSync?.requestStateSync();
+      return;
+    }
+    
+    // Update store state
+    store.setState({
+      lastMove: { from: move.from, to: move.to },
+      selectedSquare: null,
+      validMoves: [],
+    });
+    
+    // Play appropriate sound - create a minimal move object for sound
+    const soundMove: Move = {
+      from: move.from,
+      to: move.to,
+      piece: piece,
+      moveType: MoveType.NORMAL,
+      isCheck: state.game.isCurrentPlayerInCheck(),
+      isCheckmate: state.game.isGameOver(),
+      captured: undefined,
+    };
+    this.playMoveSound(soundMove);
+    
+    // Switch timer
+    if (this.timer) {
+      this.timer.switch();
+      store.switchTimer();
+    }
+    
+    // Update the game screen display
+    if (this.gameScreen) {
+      this.gameScreen.updateBoardDisplay();
+      this.gameScreen.updateMoveHistory();
+    }
+    
+    // Update analysis panel
+    if (this.analysisPanel && state.game) {
+      this.analysisPanel.updateGame(state.game);
+    }
+    
+    // Check for game over
+    this.checkGameOver();
   }
 
   /**
