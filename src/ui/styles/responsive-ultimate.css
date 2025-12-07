@@ -807,8 +807,9 @@ body.viewport-desktop .chess-board {
     font-size: 14px !important;
   }
   
+  /* Board coordinates are hidden - internal coordinates on squares are used instead */
   .board-coordinates {
-    display: block !important;
+    display: none !important;
   }
 }
 

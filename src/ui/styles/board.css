@@ -31,10 +31,10 @@
   padding: var(--spacing-lg);
 }
 
-/* Board coordinates */
+/* Board coordinates - HIDDEN by default on desktop (internal coordinates are shown on squares) */
 .board-coordinates {
   position: absolute;
-  display: flex;
+  display: none; /* Hidden by default - internal coordinates on squares are used */
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
