@@ -158,28 +158,44 @@ export class Board {
       const rank = parseInt(square.dataset.rank || '0', 10);
       const position: Position = { file, rank };
       
-      // Get the piece that should be on this square
+      // Get the piece that should be on this square from the game state
       const piece = this.game.getPieceAt(position);
       
-      // Get existing piece element (if any)
-      const existingPiece = square.querySelector('.piece') as HTMLElement | null;
+      // Get ALL existing piece elements (there should be 0 or 1, but handle duplicates)
+      const existingPieces = square.querySelectorAll('.piece');
+      const existingPiece = existingPieces.length > 0 ? existingPieces[0] as HTMLElement : null;
       
-      // Determine what piece ID should be on this square
-      const expectedPieceId = piece ? `${piece.color}-${piece.type}-${file}-${rank}` : null;
-      const currentPieceId = existingPiece?.dataset.pieceId || null;
+      // Determine what piece should be on this square
+      // Use color-type only (not position) to identify the piece type
+      const expectedPieceKey = piece ? `${piece.color}-${piece.type}` : null;
+      const currentPieceKey = existingPiece ?
+        `${existingPiece.dataset.pieceColor}-${existingPiece.dataset.pieceType}` : null;
       
-      // Only update if piece has changed
-      if (expectedPieceId !== currentPieceId) {
-        // Remove ALL existing pieces (handles duplicates too)
-        const allPieces = square.querySelectorAll('.piece');
-        allPieces.forEach(p => p.remove());
+      // Check if we need to update this square
+      // Update if:
+      // 1. There's no piece but there should be one
+      // 2. There's a piece but there shouldn't be one
+      // 3. The piece type/color is different
+      // 4. There are duplicate pieces (more than 1)
+      const needsUpdate = (
+        expectedPieceKey !== currentPieceKey ||
+        existingPieces.length > 1
+      );
+      
+      if (needsUpdate) {
+        // ALWAYS remove ALL existing pieces first
+        existingPieces.forEach(p => {
+          p.remove();
+        });
         
         // Add new piece if needed
         if (piece) {
           const pieceElement = PieceRenderer.createElement(piece, this.pieceTheme);
           pieceElement.dataset.file = file.toString();
           pieceElement.dataset.rank = rank.toString();
-          pieceElement.dataset.pieceId = expectedPieceId!;
+          pieceElement.dataset.pieceId = `${piece.color}-${piece.type}-${file}-${rank}`;
+          pieceElement.dataset.pieceColor = piece.color;
+          pieceElement.dataset.pieceType = piece.type;
           square.appendChild(pieceElement);
           square.classList.add('has-piece');
         } else {
