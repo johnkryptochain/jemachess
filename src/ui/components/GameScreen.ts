@@ -385,6 +385,8 @@ export class GameScreen {
 
   // Bound handler for fullscreen change
   private boundFullscreenHandler: (() => void) | null = null;
+  // Bound handler for tap-to-exit on square screens
+  private boundTapToExitHandler: ((e: Event) => void) | null = null;
 
   /**
    * Toggles fullscreen mode - shows only the chess board
@@ -510,6 +512,9 @@ export class GameScreen {
     });
     
     this.gameElement?.appendChild(exitBtn);
+    
+    // Add tap-to-exit for square screens (where button is hidden)
+    this.setupTapToExitFullscreen();
   }
 
   /**
@@ -519,6 +524,54 @@ export class GameScreen {
     const exitBtn = document.getElementById('fullscreen-exit-btn');
     if (exitBtn) {
       exitBtn.remove();
+    }
+    this.removeTapToExitFullscreen();
+  }
+
+  /**
+   * Check if screen has square-ish aspect ratio (like foldables)
+   */
+  private isSquareScreen(): boolean {
+    const ratio = window.innerWidth / window.innerHeight;
+    // Square screens have ratio between 0.75 (3/4) and 1.33 (4/3)
+    return ratio >= 0.75 && ratio <= 1.33;
+  }
+
+  /**
+   * Setup tap-to-exit fullscreen for square screens
+   */
+  private setupTapToExitFullscreen(): void {
+    this.removeTapToExitFullscreen();
+    
+    if (!this.isSquareScreen()) return;
+    
+    // Create a double-tap handler to exit fullscreen
+    let lastTap = 0;
+    this.boundTapToExitHandler = (e: Event) => {
+      // Only handle taps on the board container background, not on pieces
+      const target = e.target as HTMLElement;
+      if (target.closest('.chess-piece') || target.closest('.fullscreen-exit-btn')) {
+        return;
+      }
+      
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        // Double tap detected - exit fullscreen
+        document.exitFullscreen();
+      }
+      lastTap = now;
+    };
+    
+    this.gameElement?.addEventListener('click', this.boundTapToExitHandler);
+  }
+
+  /**
+   * Remove tap-to-exit fullscreen handler
+   */
+  private removeTapToExitFullscreen(): void {
+    if (this.boundTapToExitHandler && this.gameElement) {
+      this.gameElement.removeEventListener('click', this.boundTapToExitHandler);
+      this.boundTapToExitHandler = null;
     }
   }
 

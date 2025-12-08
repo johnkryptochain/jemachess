@@ -612,10 +612,12 @@
   .game-container.fullscreen-mode {
     /* Ensure full coverage on square-ish screens */
     padding: 0 !important;
+    /* Allow tap anywhere to exit fullscreen */
+    cursor: pointer;
   }
   
   .game-container.fullscreen-mode .board-container {
-    /* Center the board - button is now at top right */
+    /* Center the board */
     padding: 0;
   }
   
@@ -625,11 +627,11 @@
     height: min(100vw, 100vh, 100dvh) !important;
   }
   
+  /* HIDE the exit button on square screens - tap anywhere to exit */
   .fullscreen-exit-btn {
-    /* Button at top right */
-    top: env(safe-area-inset-top, 8px);
-    right: env(safe-area-inset-right, 8px);
-    margin: 8px;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 }
 
@@ -643,6 +645,13 @@
     /* Use full available space */
     width: min(100vw, 100vh, 100dvh) !important;
     height: min(100vw, 100vh, 100dvh) !important;
+  }
+  
+  /* HIDE the exit button on very square screens - tap anywhere to exit */
+  .fullscreen-exit-btn {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
   }
 }
 

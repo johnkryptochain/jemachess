@@ -149,13 +149,17 @@
 }
 
 .room-code-display {
-  font-size: var(--font-size-2xl);
+  font-size: clamp(0.75rem, 4vw, var(--font-size-2xl));
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.3em;
-  padding: var(--spacing-lg) var(--spacing-xl);
-  margin: var(--spacing-lg) 0;
+  letter-spacing: 0.05em;
+  padding: var(--spacing-md) var(--spacing-sm);
+  margin: var(--spacing-md) 0;
   font-family: monospace;
   text-align: center;
+  word-break: break-all;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  line-height: 1.4;
 }
 
 .room-code-label {
@@ -731,6 +735,48 @@
   
   .lobby-container {
     padding: var(--spacing-md);
+  }
+  
+  .room-code-display {
+    font-size: clamp(0.7rem, 3.5vw, 1rem);
+    letter-spacing: 0.02em;
+    padding: var(--spacing-sm);
+    line-height: 1.5;
+  }
+}
+
+/* Very small screens - iPhone 4/5/SE, Honor Magic V3 closed */
+@media (max-width: 360px) {
+  .lobby-container {
+    padding: var(--spacing-sm);
+  }
+  
+  .room-code-display {
+    font-size: 0.65rem;
+    letter-spacing: 0;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    line-height: 1.6;
+  }
+  
+  .room-code-label {
+    font-size: var(--font-size-xs);
+  }
+  
+  .room-code-copy {
+    font-size: var(--font-size-xs);
+  }
+  
+  .lobby-title {
+    font-size: var(--font-size-lg);
+  }
+  
+  .settings-header {
+    gap: var(--spacing-sm);
+  }
+  
+  .settings-back {
+    width: 32px;
+    height: 32px;
   }
   
   .settings-panel {
