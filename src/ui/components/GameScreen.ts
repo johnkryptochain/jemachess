@@ -162,7 +162,11 @@ export class GameScreen {
       const y = boardRect.top + ((7 - to.rank) + 0.5) * squareSize;
 
       const dialog = getPromotionDialog();
-      return dialog.show(color, this.settings.pieceTheme, { x, y });
+      
+      // Pass the game container as the dialog container for fullscreen support
+      // When in fullscreen mode, the dialog must be inside the fullscreen element to be interactive
+      const dialogContainer = this.gameElement || document.body;
+      return dialog.show(color, this.settings.pieceTheme, { x, y }, dialogContainer);
     };
 
     // Handle moves

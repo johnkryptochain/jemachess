@@ -25,18 +25,20 @@ export class PromotionDialog {
    * @param color The color of the promoting pawn
    * @param theme The piece theme to use
    * @param position The position to show the dialog (screen coordinates)
+   * @param container Optional container element to append the dialog to (for fullscreen support)
    * @returns A promise that resolves with the selected piece type
    */
   show(
     color: PieceColor,
     theme: PieceTheme,
-    position: { x: number; y: number }
+    position: { x: number; y: number },
+    container?: HTMLElement
   ): Promise<PieceType> {
     return new Promise((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;
       
-      this.createDialog(color, theme, position);
+      this.createDialog(color, theme, position, container);
       
       // Add keyboard listener
       document.addEventListener('keydown', this.handleKeyDown);
@@ -65,7 +67,8 @@ export class PromotionDialog {
   private createDialog(
     color: PieceColor,
     theme: PieceTheme,
-    position: { x: number; y: number }
+    position: { x: number; y: number },
+    container?: HTMLElement
   ): void {
     // Create overlay
     this.overlay = document.createElement('div');
@@ -113,9 +116,15 @@ export class PromotionDialog {
       const pieceImg = PieceRenderer.createElement(piece, theme);
       option.appendChild(pieceImg);
       
-      option.addEventListener('click', () => {
+      // Handle both click and touch events for mobile support
+      const handleSelect = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
         this.selectPiece(pieceType);
-      });
+      };
+      
+      option.addEventListener('click', handleSelect);
+      option.addEventListener('touchend', handleSelect);
       
       // Hover effect
       option.addEventListener('mouseenter', () => {
@@ -129,15 +138,22 @@ export class PromotionDialog {
       this.dialog.appendChild(option);
     }
     
-    // Click on overlay cancels (selects queen by default)
-    this.overlay.addEventListener('click', (e) => {
+    // Click/touch on overlay cancels (selects queen by default)
+    const handleOverlayDismiss = (e: Event) => {
       if (e.target === this.overlay) {
+        e.preventDefault();
         this.selectPiece(PieceType.QUEEN);
       }
-    });
+    };
+    
+    this.overlay.addEventListener('click', handleOverlayDismiss);
+    this.overlay.addEventListener('touchend', handleOverlayDismiss);
     
     this.overlay.appendChild(this.dialog);
-    document.body.appendChild(this.overlay);
+    
+    // Append to provided container (for fullscreen support) or document.body as fallback
+    const targetContainer = container || document.body;
+    targetContainer.appendChild(this.overlay);
     
     // Trigger animation
     requestAnimationFrame(() => {

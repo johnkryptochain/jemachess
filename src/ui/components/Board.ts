@@ -679,11 +679,42 @@ export class Board {
     if (success) {
       this.lastMove = { from: move.from, to: move.to };
       this.clearSelection();
+      
+      // Synchronously remove captured piece to prevent visual latency
+      // This must happen BEFORE the requestAnimationFrame in update()
+      if (move.captured) {
+        this.removePieceAt(move.to);
+      }
+      
+      // For en passant captures, remove the pawn from its actual position
+      if (move.moveType === MoveType.EN_PASSANT) {
+        const capturedPawnRank = move.piece.color === PieceColor.WHITE ? move.to.rank - 1 : move.to.rank + 1;
+        this.removePieceAt({ file: move.to.file, rank: capturedPawnRank });
+      }
+      
       this.update();
       
       if (this.onMove) {
         this.onMove(move);
       }
+    }
+  }
+
+  /**
+   * Synchronously removes a piece from the DOM at the given position
+   * This is used to immediately remove captured pieces before the animation frame
+   */
+  private removePieceAt(position: Position): void {
+    if (!this.boardElement) return;
+    
+    const square = this.boardElement.querySelector(
+      `.square[data-file="${position.file}"][data-rank="${position.rank}"]`
+    ) as HTMLElement;
+    
+    if (square) {
+      const pieces = square.querySelectorAll('.piece');
+      pieces.forEach(piece => piece.remove());
+      square.classList.remove('has-piece');
     }
   }
 
