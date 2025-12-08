@@ -435,3 +435,91 @@
 .theme-flip-btn.flipping .theme-btn-piece {
   transform: rotateY(180deg);
 }
+/* Game Over Modal */
+.game-over-modal .game-over-content {
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.game-over-icon {
+  font-size: 4rem;
+  line-height: 1;
+  animation: bounceIn 0.5s ease-out;
+}
+
+.game-over-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #5558ac !important;
+  margin: 0;
+}
+
+.game-over-subtitle {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.game-over-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+  margin-top: var(--spacing-md);
+}
+
+.game-over-actions .glass-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.game-over-actions .button-icon {
+  margin-right: var(--spacing-sm);
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Button icons in game over modal */
+.game-over-actions .button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.game-over-actions .button-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: #5558ac;
+  fill: none;
+  stroke-width: 2;
+}
+
+/* Primary button icon should be white */
+.game-over-actions .glass-button.primary .button-icon svg {
+  stroke: white;
+}
+
+/* Secondary button icon should match the design color */
+.game-over-actions .glass-button.secondary .button-icon svg {
+  stroke: #5558ac;
+}

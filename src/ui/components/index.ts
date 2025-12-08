@@ -22,6 +22,7 @@ export { PieceRenderer } from './Piece';
 
 // Dialogs
 export { PromotionDialog, getPromotionDialog } from './PromotionDialog';
+export { GameOverModal, getGameOverModal } from './GameOverModal';
 
 // Screens
 export { GameScreen } from './GameScreen';

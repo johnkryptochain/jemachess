@@ -11,6 +11,7 @@ import { PieceTheme, PieceColor, GameStatus, Move, PieceType } from '../../types
 import { getPromotionDialog } from './PromotionDialog';
 import { Toast } from './Toast';
 import { GameSettings } from './Settings';
+import { getGameOverModal, GameOverModal } from './GameOverModal';
 
 /**
  * Formats time in mm:ss format
@@ -36,8 +37,8 @@ export class GameScreen {
   private blackPlayerCard: HTMLElement | null = null;
   private moveHistoryPanel: HTMLElement | null = null;
   private boardContainer: HTMLElement | null = null;
-  private gameOverlay: HTMLElement | null = null;
   private themeBtn: HTMLButtonElement | null = null;
+  private gameOverModal: GameOverModal;
 
   // Player info
   private whiteName: string = 'Blancs';
@@ -74,6 +75,11 @@ export class GameScreen {
       showCoordinates: true,
       autoQueen: false,
     };
+    
+    // Initialize the game over modal
+    this.gameOverModal = getGameOverModal();
+    this.gameOverModal.onRestart = () => this.handleRestart();
+    this.gameOverModal.onQuit = () => this.handleQuit();
   }
 
   /**
@@ -128,10 +134,6 @@ export class GameScreen {
     rightPanel.appendChild(gameActions);
 
     this.gameElement.appendChild(rightPanel);
-
-    // Game over overlay
-    this.gameOverlay = this.createGameOverlay();
-    this.gameElement.appendChild(this.gameOverlay);
 
     this.container.appendChild(this.gameElement);
 
@@ -655,46 +657,28 @@ export class GameScreen {
   }
 
   /**
-   * Creates the game over overlay
+   * Handles restart action from the game over modal
    */
-  private createGameOverlay(): HTMLElement {
-    const overlay = document.createElement('div');
-    overlay.className = 'board-overlay';
+  private handleRestart(): void {
+    this.gameOverModal.hide();
+    // Reset the game
+    this.game.reset();
+    if (this.board) {
+      this.board.forceUpdate();
+    }
+    this.updateMoveHistory();
+    this.updatePlayerCards();
+  }
 
-    const title = document.createElement('div');
-    title.className = 'board-overlay-title';
-    overlay.appendChild(title);
-
-    const subtitle = document.createElement('div');
-    subtitle.className = 'board-overlay-subtitle';
-    overlay.appendChild(subtitle);
-
-    const actions = document.createElement('div');
-    actions.className = 'board-overlay-actions';
-
-    const rematchBtn = document.createElement('button');
-    rematchBtn.className = 'glass-button primary';
-    rematchBtn.textContent = 'Revanche';
-    rematchBtn.addEventListener('click', () => {
-      if (this.onRematch) {
-        this.onRematch();
-      }
-    });
-    actions.appendChild(rematchBtn);
-
-    const exitBtn = document.createElement('button');
-    exitBtn.className = 'glass-button secondary';
-    exitBtn.textContent = 'Quitter';
-    exitBtn.addEventListener('click', () => {
-      if (this.onExit) {
-        this.onExit();
-      }
-    });
-    actions.appendChild(exitBtn);
-
-    overlay.appendChild(actions);
-
-    return overlay;
+  /**
+   * Handles quit action from the game over modal
+   */
+  private handleQuit(): void {
+    this.gameOverModal.hide();
+    // Call the onExit callback if defined
+    if (this.onExit) {
+      this.onExit();
+    }
   }
 
   /**
@@ -769,76 +753,21 @@ export class GameScreen {
   }
 
   /**
-   * Shows the game over overlay
+   * Shows the game over modal
    */
   showGameOver(status: GameStatus, winner?: PieceColor): void {
-    if (!this.gameOverlay) return;
-
-    const title = this.gameOverlay.querySelector('.board-overlay-title');
-    const subtitle = this.gameOverlay.querySelector('.board-overlay-subtitle');
-
-    if (title && subtitle) {
-      switch (status) {
-        case GameStatus.WHITE_WINS_CHECKMATE:
-          title.textContent = 'Échec et mat !';
-          subtitle.textContent = `${this.whiteName} gagne !`;
-          break;
-        case GameStatus.BLACK_WINS_CHECKMATE:
-          title.textContent = 'Échec et mat !';
-          subtitle.textContent = `${this.blackName} gagne !`;
-          break;
-        case GameStatus.WHITE_WINS_RESIGNATION:
-          title.textContent = 'Abandon';
-          subtitle.textContent = `${this.whiteName} gagne !`;
-          break;
-        case GameStatus.BLACK_WINS_RESIGNATION:
-          title.textContent = 'Abandon';
-          subtitle.textContent = `${this.blackName} gagne !`;
-          break;
-        case GameStatus.WHITE_WINS_TIMEOUT:
-          title.textContent = 'Temps écoulé';
-          subtitle.textContent = `${this.whiteName} gagne !`;
-          break;
-        case GameStatus.BLACK_WINS_TIMEOUT:
-          title.textContent = 'Temps écoulé';
-          subtitle.textContent = `${this.blackName} gagne !`;
-          break;
-        case GameStatus.DRAW_STALEMATE:
-          title.textContent = 'Pat';
-          subtitle.textContent = 'Nulle';
-          break;
-        case GameStatus.DRAW_INSUFFICIENT_MATERIAL:
-          title.textContent = 'Matériel insuffisant';
-          subtitle.textContent = 'Nulle';
-          break;
-        case GameStatus.DRAW_THREEFOLD_REPETITION:
-          title.textContent = 'Triple répétition';
-          subtitle.textContent = 'Nulle';
-          break;
-        case GameStatus.DRAW_FIFTY_MOVES:
-          title.textContent = 'Règle des 50 coups';
-          subtitle.textContent = 'Nulle';
-          break;
-        case GameStatus.DRAW_AGREEMENT:
-          title.textContent = 'Nulle par accord mutuel';
-          subtitle.textContent = 'Nulle';
-          break;
-        default:
-          title.textContent = 'Partie terminée';
-          subtitle.textContent = '';
-      }
-    }
-
-    this.gameOverlay.classList.add('active');
+    // Get the container for fullscreen support
+    const container = this.container.closest('.fullscreen') as HTMLElement || this.gameElement || document.body;
+    
+    // Show the new modal
+    this.gameOverModal.show(status, container);
   }
 
   /**
-   * Hides the game over overlay
+   * Hides the game over modal
    */
   hideGameOver(): void {
-    if (this.gameOverlay) {
-      this.gameOverlay.classList.remove('active');
-    }
+    this.gameOverModal.hide();
   }
 
   /**

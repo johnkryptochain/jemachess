@@ -1,8 +1,8 @@
 /**
  * Chess AI Module
- * 
+ *
  * Implements a chess AI using minimax algorithm with alpha-beta pruning.
- * Supports multiple difficulty levels.
+ * Supports multiple difficulty levels with optimized performance.
  */
 
 import { ChessGame } from './game';
@@ -21,14 +21,17 @@ export type AIDifficulty = 'easy' | 'medium' | 'hard' | 'master';
 interface AIConfig {
   maxDepth: number;
   useQuiescence: boolean;
+  quiescenceDepth: number;
   randomness: number; // Random factor to add variety (0-100 centipawns)
+  maxTimeMs: number; // Maximum time in milliseconds
+  maxNodes: number; // Maximum nodes to search
 }
 
 const DIFFICULTY_CONFIG: Record<AIDifficulty, AIConfig> = {
-  easy: { maxDepth: 1, useQuiescence: false, randomness: 100 },
-  medium: { maxDepth: 2, useQuiescence: false, randomness: 50 },
-  hard: { maxDepth: 3, useQuiescence: true, randomness: 20 },
-  master: { maxDepth: 4, useQuiescence: true, randomness: 0 },
+  easy: { maxDepth: 1, useQuiescence: false, quiescenceDepth: 0, randomness: 100, maxTimeMs: 50, maxNodes: 200 },
+  medium: { maxDepth: 1, useQuiescence: false, quiescenceDepth: 0, randomness: 50, maxTimeMs: 100, maxNodes: 500 },
+  hard: { maxDepth: 1, useQuiescence: false, quiescenceDepth: 0, randomness: 10, maxTimeMs: 150, maxNodes: 800 },
+  master: { maxDepth: 2, useQuiescence: false, quiescenceDepth: 0, randomness: 0, maxTimeMs: 200, maxNodes: 1500 },
 };
 
 /**
@@ -48,7 +51,9 @@ export class ChessAI {
   private config: AIConfig;
   private transpositionTable: Map<string, TTEntry> = new Map();
   private nodesSearched: number = 0;
-  private maxTableSize: number = 100000;
+  private maxTableSize: number = 50000;
+  private searchStartTime: number = 0;
+  private shouldStop: boolean = false;
 
   constructor(difficulty: AIDifficulty = 'medium') {
     this.config = DIFFICULTY_CONFIG[difficulty];
@@ -63,51 +68,102 @@ export class ChessAI {
   }
 
   /**
+   * Check if search should stop due to time or node limits
+   */
+  private checkLimits(): boolean {
+    if (this.shouldStop) return true;
+    
+    // Check node limit
+    if (this.nodesSearched >= this.config.maxNodes) {
+      this.shouldStop = true;
+      return true;
+    }
+    
+    // Check time limit more frequently (every 100 nodes)
+    if (this.nodesSearched % 100 === 0) {
+      const elapsed = Date.now() - this.searchStartTime;
+      if (elapsed >= this.config.maxTimeMs) {
+        this.shouldStop = true;
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
    * Get the best move for the current position
    */
   getBestMove(game: ChessGame): Move | null {
     this.nodesSearched = 0;
-    this.transpositionTable.clear();
+    this.shouldStop = false;
+    this.searchStartTime = Date.now();
+    
+    // Clear transposition table if it's too large
+    if (this.transpositionTable.size > this.maxTableSize / 2) {
+      this.transpositionTable.clear();
+    }
 
     const moves = game.getAllCurrentLegalMoves();
     if (moves.length === 0) return null;
     if (moves.length === 1) return moves[0]; // Only one legal move
 
     const isMaximizing = game.currentTurn === PieceColor.WHITE;
-    let bestMove: Move | null = null;
+    let bestMove: Move | null = moves[0]; // Default to first move
     let bestScore = isMaximizing ? -Infinity : Infinity;
 
     // Order moves for better pruning
     const orderedMoves = this.orderMoves(moves, game);
 
-    for (const move of orderedMoves) {
-      // Make the move
-      const gameCopy = this.cloneGame(game);
-      gameCopy.makeMove(move);
+    // Use iterative deepening for better time management
+    for (let depth = 1; depth <= this.config.maxDepth; depth++) {
+      if (this.shouldStop) break;
+      
+      let depthBestMove: Move | null = null;
+      let depthBestScore = isMaximizing ? -Infinity : Infinity;
 
-      // Search
-      const score = this.minimax(
-        gameCopy,
-        this.config.maxDepth - 1,
-        -Infinity,
-        Infinity,
-        !isMaximizing
-      );
+      for (const move of orderedMoves) {
+        if (this.shouldStop) break;
+        
+        // Make the move on a copy
+        const gameCopy = this.cloneGame(game);
+        gameCopy.makeMove(move);
 
-      // Add randomness for variety (especially at lower difficulties)
-      const randomFactor = (Math.random() - 0.5) * this.config.randomness;
-      const adjustedScore = score + randomFactor;
+        // Search
+        const score = this.minimax(
+          gameCopy,
+          depth - 1,
+          -Infinity,
+          Infinity,
+          !isMaximizing
+        );
 
-      if (isMaximizing) {
-        if (adjustedScore > bestScore) {
-          bestScore = adjustedScore;
-          bestMove = move;
+        if (this.shouldStop && depthBestMove === null) {
+          // If we stopped mid-search and have no result for this depth, use previous depth's result
+          break;
         }
-      } else {
-        if (adjustedScore < bestScore) {
-          bestScore = adjustedScore;
-          bestMove = move;
+
+        // Add randomness for variety (especially at lower difficulties)
+        const randomFactor = (Math.random() - 0.5) * this.config.randomness;
+        const adjustedScore = score + randomFactor;
+
+        if (isMaximizing) {
+          if (adjustedScore > depthBestScore) {
+            depthBestScore = adjustedScore;
+            depthBestMove = move;
+          }
+        } else {
+          if (adjustedScore < depthBestScore) {
+            depthBestScore = adjustedScore;
+            depthBestMove = move;
+          }
         }
+      }
+
+      // Only update best move if we completed this depth
+      if (depthBestMove !== null && !this.shouldStop) {
+        bestMove = depthBestMove;
+        bestScore = depthBestScore;
       }
     }
 
@@ -127,6 +183,11 @@ export class ChessAI {
   ): number {
     this.nodesSearched++;
 
+    // Check limits periodically
+    if (this.checkLimits()) {
+      return evaluatePosition(game.getBoard());
+    }
+
     // Check transposition table
     const posKey = game.toFEN();
     const ttEntry = this.transpositionTable.get(posKey);
@@ -144,7 +205,7 @@ export class ChessAI {
 
     if (depth <= 0) {
       if (this.config.useQuiescence) {
-        return this.quiescence(game, alpha, beta, isMaximizing, 4);
+        return this.quiescence(game, alpha, beta, isMaximizing, this.config.quiescenceDepth);
       }
       return evaluatePosition(game.getBoard());
     }
@@ -154,14 +215,19 @@ export class ChessAI {
       return this.evaluateTerminal(game);
     }
 
-    // Order moves for better pruning
+    // Order moves for better pruning - limit to top moves for performance
     const orderedMoves = this.orderMoves(moves, game);
+    // Limit moves aggressively to prevent lag
+    const maxMoves = depth <= 1 ? 6 : 8;
+    const movesToSearch = orderedMoves.slice(0, Math.min(orderedMoves.length, maxMoves));
 
     let bestScore = isMaximizing ? -Infinity : Infinity;
     let bestMove: Move | undefined;
     let flag: 'exact' | 'lowerbound' | 'upperbound' = 'exact';
 
-    for (const move of orderedMoves) {
+    for (const move of movesToSearch) {
+      if (this.shouldStop) break;
+      
       const gameCopy = this.cloneGame(game);
       gameCopy.makeMove(move);
 
@@ -187,8 +253,8 @@ export class ChessAI {
       }
     }
 
-    // Store in transposition table
-    if (this.transpositionTable.size < this.maxTableSize) {
+    // Store in transposition table (only if not stopped)
+    if (!this.shouldStop && this.transpositionTable.size < this.maxTableSize) {
       this.transpositionTable.set(posKey, {
         depth,
         score: bestScore,
@@ -202,6 +268,7 @@ export class ChessAI {
 
   /**
    * Quiescence search - search captures until position is quiet
+   * Optimized with delta pruning and limited depth
    */
   private quiescence(
     game: ChessGame,
@@ -211,6 +278,11 @@ export class ChessAI {
     depth: number
   ): number {
     this.nodesSearched++;
+
+    // Check limits
+    if (this.shouldStop) {
+      return evaluatePosition(game.getBoard());
+    }
 
     const standPat = evaluatePosition(game.getBoard());
 
@@ -230,10 +302,17 @@ export class ChessAI {
 
     if (captures.length === 0) return standPat;
 
-    // Order captures by MVV-LVA
-    const orderedCaptures = this.orderCaptures(captures);
+    // Order captures by MVV-LVA and limit to best captures
+    const orderedCaptures = this.orderCaptures(captures).slice(0, 5);
 
     for (const move of orderedCaptures) {
+      if (this.shouldStop) break;
+      
+      // Delta pruning - skip if capture can't improve alpha
+      const captureValue = move.captured ? PIECE_VALUES[move.captured.type] : 0;
+      if (isMaximizing && standPat + captureValue + 200 < alpha) continue;
+      if (!isMaximizing && standPat - captureValue - 200 > beta) continue;
+      
       const gameCopy = this.cloneGame(game);
       gameCopy.makeMove(move);
 

@@ -1571,12 +1571,19 @@ export class App {
     // Play game end sound
     this.soundManager.play('gameEnd');
     
-    // Show game over notification
+    // Show game over modal and notification
     const state = store.getState();
     const { game } = state;
     
     if (game) {
       const status = game.gameStatus;
+      
+      // Show the game over modal
+      if (this.gameScreen) {
+        this.gameScreen.showGameOver(status);
+      }
+      
+      // Also show a toast notification
       const message = this.getGameOverMessage(status);
       Toast.info(message, 5000);
     }

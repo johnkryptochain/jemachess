@@ -299,6 +299,20 @@
   visibility: visible;
 }
 
+/* Fullscreen mode - ensure overlay covers entire screen */
+.game-container.fullscreen-mode .board-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  border-radius: 0 !important;
+  z-index: 10002 !important; /* Above fullscreen exit button (10001) */
+}
+
+.game-container.fullscreen-mode .board-overlay.active {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 .board-overlay-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);

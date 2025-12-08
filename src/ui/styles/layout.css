@@ -48,6 +48,8 @@
   padding: var(--spacing-sm);
   /* Prevent overflow */
   overflow: visible;
+  /* Required for absolute positioned overlay */
+  position: relative;
 }
 
 /* Side Panels */
